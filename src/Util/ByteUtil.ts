@@ -1,5 +1,7 @@
+// noinspection JSUnusedGlobalSymbols
+
 import * as Converter from "./Converter";
-import CONST from "../PenCotroller/Const";
+import CONST from "../PenController/Const";
 
 export default class ByteUtil {
   mBuffer: number[];
@@ -20,89 +22,81 @@ export default class ByteUtil {
   }
 
   /**
-   * 버퍼에 데이터를 추가하는 함수
+   * Puts data into the buffer.
    * @param {number} input
    */
   PutByte(input: number) {
     this.mBuffer.push(input);
-  }
-
-  /**
-   * 버퍼에 데이터를 추가하며 escape 여부를 확인하는 함수
-   * @param {number} input
-   * @param {boolean} escapeIfExist - false = 버퍼의 시작과 끝에 추가하여 escape처리를 안할 때
-   * @returns
-   */
-  Put(input: number, escapeIfExist = true) {
-    if (escapeIfExist) {
-      let escDatas = this.Escape(input);
-
-      let length = escDatas.length;
-      for (let i = 0; i < length; ++i) {
-        this.PutByte(escDatas[i]);
-      }
-    } else {
-      this.PutByte(input);
-    }
-
     return this;
   }
 
+  PutBool(input: boolean) {
+    return this.PutByte(input ? 1 : 0);
+  }
+
   /**
-   * 버퍼에 특정 크기만큼의 배열을 추가하는 함수
+   * Puts data into the buffer and checks for escape characters.
+   * @param {number} input
+   * @param {boolean} escapeIfExist - false = do not escape when adding to the beginning and end of the buffer.
+   * @returns
+   */
+  Put(input: number, escapeIfExist: boolean = true) {
+    return escapeIfExist
+        ? this.PutArray(new Uint8Array(this.Escape(input)))
+        : this.PutByte(input);
+  }
+
+  /**
+   * Puts a specific length of an array into the buffer.
    * @param {array} inputs
    * @param {number} length
    * @returns
    */
-  PutArray(inputs: Uint8Array, length: number) {
-    let result = inputs.slice();
-    for (let i = 0; i < length; ++i) {
-      this.Put(result[i]);
-    }
-    return this;
+  PutArray(inputs: Uint8Array, length?: number) {
+    return (!length || length === inputs.length ? inputs : inputs.slice(0, length))
+        .reduce((_, byte) => _.PutByte(byte), this);
   }
 
   /**
-   * 버퍼에 특정 크기만큼 빈 값을 추가하는 함수
+   * Puts a specific length of null values into the buffer.
    * @param {number} length
    * @returns
    */
   PutNull(length: number) {
-    for (let i = 0; i < length; ++i) {
-      this.Put(0x00);
-    }
+    for (let i = 0; i < length; ++i)
+      this.PutByte(0x00);
 
     return this;
   }
 
   /**
-   * 버퍼에 4바이트 크기의 값을 추가하는 함수
+   * Puts a 4-byte value into the buffer.
    * @param {number} input
    * @returns
    */
   PutInt(input: number) {
-    let arr = Converter.intToByteArray(input);
+    const arr = Converter.intToByteArray(input);
     return this.PutArray(arr, arr.length);
   }
 
   /**
-   * 버퍼에 8바이트 크기의 값을 추가하는 함수
+   * Puts an 8-byte value into the buffer.
    * @param {number} input
    * @returns
    */
   PutLong(input: number) {
-    let arr = Converter.longToByteArray(input);
+    const arr = Converter.longToByteArray(input);
     // NLog.log("put long", arr)
     return this.PutArray(arr, arr.length);
   }
 
   /**
-   * 버퍼에 2바이트 크기의 값을 추가하는 함수
+   * Puts a 2-byte value into the buffer.
    * @param {number} input
    * @returns
    */
   PutShort(input: number) {
-    let arr = Converter.shortToByteArray(input);
+    const arr = Converter.shortToByteArray(input);
     return this.PutArray(arr, arr.length);
   }
 
@@ -110,25 +104,20 @@ export default class ByteUtil {
   // Get
   //
   /**
-   * 버퍼에서 원하는 바이트 크기만큼의 값을 반환하고, 바이트 위치값을 수정하는 함수
+   * Gets the desired byte size from the buffer and updates the byte position value.
    * @param {number} size
    * @returns
    */
-  GetBytes(size: number) {
-    let length = 0;
-    if (size) {
-      length = size;
-    } else {
-      length = this.mBuffer.length - this.mPosRead;
-    }
-    let result = this.mBuffer.slice(this.mPosRead, this.mPosRead + length);
+  GetBytes(size?: number) {
+    const length = size ?? (this.mBuffer.length - this.mPosRead);
+    const result = this.mBuffer.slice(this.mPosRead, this.mPosRead + length);
     this.mPosRead += length;
-    const u8 = new Uint8Array(result);
-    return u8;
+
+    return new Uint8Array(result);
   }
 
   /**
-   * 버퍼에서 1바이트 크기의 값을 반환받는 함수
+   * Gets a 1-byte value from the buffer.
    * @returns
    */
   GetByte() {
@@ -136,7 +125,7 @@ export default class ByteUtil {
   }
 
   /**
-   * 버퍼에서 4바이트 크기의 값을 반환받는 함수
+   * Gets a 4-byte value from the buffer.
    * @returns
    */
   GetInt() {
@@ -144,7 +133,7 @@ export default class ByteUtil {
   }
 
   /**
-   * 버퍼에서 2바이트 크기의 값을 반환받는 함수
+   * Function to retrieve a 2-byte value from the buffer
    * @returns
    */
   GetShort() {
@@ -152,7 +141,7 @@ export default class ByteUtil {
   }
 
   /**
-   * 버퍼에서 8바이트 크기의 값을 반환받는 함수
+   * Function to retrieve an 8-byte value from the buffer
    * @returns
    */
   GetLong() {
@@ -160,131 +149,112 @@ export default class ByteUtil {
   }
 
   /**
-   * 버퍼에서 원하는 바이트 크기만큼의 값을 반환받는 함수
+   * Function to retrieve a value of the desired byte size from the buffer
    * @param {number} length
    * @returns
    */
   GetString(length: number) {
-    const arr = Array.from(this.GetBytes(length));
-    return String.fromCharCode(...arr).trim();
+    const bytes = Array.from(this.GetBytes(length));
+    return String.fromCharCode(...bytes).trim();
   }
 
   /**
-   * 버퍼에서 원하는 위치, 바이트 크기만큼의 값을 반환받는 함수
+   * Function to retrieve a value from the buffer at the specified position with the desired byte size
    * @param {number} offset
    * @param {number} size
    * @returns
    */
   GetBytesWithOffset(offset: number, size: number) {
-    let packetSize = 0;
-    if (offset + size > this.mBuffer.length) {
-      packetSize = this.mBuffer.length - offset;
-    } else {
-      packetSize = size;
-    }
+    const packetSize = offset + size > this.mBuffer.length
+        ? this.mBuffer.length - offset
+        : size;
 
-    let result = this.mBuffer.slice(offset, offset + packetSize);
+    const result = this.mBuffer.slice(offset, offset + packetSize);
 
-    const u8 = new Uint8Array(result);
-    return u8;
+    return new Uint8Array(result);
   }
 
   /**
-   * 원하는 크기만큼의 버퍼의 검사합을 반환받는 함수
+   * Function to return the checksum of the buffer for a specified length
    * @param {number} length
    * @returns
    */
   GetCheckSum(length: number) {
-    let bytes = this.mBuffer.slice(this.mPosRead, this.mPosRead + length);
-    let CheckSum = 0;
-    let bufSize = bytes.length;
-    for (let i = 0; i < bufSize; ++i) {
-      CheckSum += bytes[i] & 0xff;
-    }
+    const bytes = this.mBuffer.slice(this.mPosRead, this.mPosRead + length);
 
-    return CheckSum & 0xff;
+    return this.GetCheckSumData(new Uint8Array(bytes));
   }
 
   /**
-   * 버퍼 전체의 검사합을 반환받는 함수
-   * @returns
+   * Function to return the checksum of the entire buffer
+   * @returns {number}
    */
-  GetCheckSumBF() {
-    let CheckSum = 0;
-    for (let i = 0; i < this.mBuffer.length; i++) {
-      CheckSum += this.mBuffer[i] & 0xff;
-    }
-    return CheckSum & 0xff;
+  GetCheckSumBF(): number {
+    return this.GetCheckSumData(new Uint8Array(this.mBuffer));
   }
 
   /**
-   * 원하는 버퍼의 검사합을 반환받는 함수
+   * Function to return the checksum of the specified data buffer
    * @param {Uint8Array} data
-   * @returns
+   * @returns {number}
    */
-  GetCheckSumData(data: Uint8Array) {
-    let CheckSum = 0;
-    for (let i = 0; i < data.length; i++) {
-      CheckSum += data[i] & 0xff;
-    }
-    return CheckSum & 0xff;
+  GetCheckSumData(data: Uint8Array): number {
+    return data.reduce((checkSum, num) => checkSum + num & 0xff, 0) & 0xff;
   }
 
   /**
-   * 현 버퍼를 Uint8Array 배열로 변환 후 반환하는 함수
-   * @returns {array}
+   * Function to convert the current buffer to a Uint8Array array
+   * @returns {Uint8Array}
    */
-  ToU8Array() {
-    let u8 = new Uint8Array(this.mBuffer);
-    return u8;
+  ToU8Array(): Uint8Array {
+    return new Uint8Array(this.mBuffer);
   }
 
   /**
-   * 패킷 내 실데이터 값으로 패킷의 시작, 끝 값인 STX, ETX가 포함되어 있을 때 escape 처리를 위한 함수
+   * Function for escaping STX, ETX, or DLE characters in the packet's actual data values
    * @param {number} input
    * @returns {array}
    */
-  Escape(input: number) {
-    if (input === CONST.PK_STX || input === CONST.PK_ETX || input === CONST.PK_DLE) {
-      return [CONST.PK_DLE, input ^ 0x20];
-    } else {
-      return [input];
-    }
+  Escape(input: number): number[] {
+    return (input === CONST.PK_STX || input === CONST.PK_ETX || input === CONST.PK_DLE)
+        ? [CONST.PK_DLE, input ^ 0x20]
+        : [input];
   }
 }
 
 /**
- * byte를 16진수문자열로 변환시키는 함수
+ * Function to convert bytes to a hexadecimal string
  * @param {array} bytes
  * @returns
  */
 export function toHexString(bytes: Uint8Array) {
-  const hex = Array.from(bytes)
-    .map((x) => (x as any).toString(16).padStart(2, "0"))
-    .join("");
-  return hex;
+  return Array
+      .from(bytes)
+      .map((x) => (x as any).toString(16).padStart(2, "0"))
+      .join("");
 }
 
 /**
- * section, owner를 4byte 크기의 데이터로 변환시키는 함수
+ * Function to convert section and owner to 4-byte data
  * @param {number} section
  * @param {number} owner
  * @returns
  */
 export function GetSectionOwnerByte(section: number, owner: number) {
-  let ownerByte = Converter.intToByteArray(owner);
+  const ownerByte = Converter.intToByteArray(owner);
   ownerByte[3] = section & 0xff;
   return ownerByte;
 }
 
-// 4 byte array
+// 4-byte array
 /**
- * 패킷에서 피상된 4byte 크기의 데이터를 노트 정보인 section, owner로 치환하는 함수
+ * Function to substitute the 4-byte data extracted from the packet with section and owner information
  * @param {array} bytes
- * @returns {array}
+ * @returns
  */
-export function GetSectionOwner(bytes: Uint8Array) {
-  let section = bytes[3] & 0xff;
-  let owner = bytes[0] + bytes[1] * 256 + bytes[2] * 65536;
-  return [section, owner];
+export function GetSectionOwner(bytes: Uint8Array): { section: number, owner: number } {
+  const section = bytes[3] & 0xff;
+  const owner = bytes[0] + bytes[1] * 256 + bytes[2] * 65536;
+
+  return { section, owner };
 }

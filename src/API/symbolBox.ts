@@ -1,7 +1,7 @@
 import { PageInfo } from "../Util/type";
 
 type PuiSymbolType = {
-  sobp: PageInfo;
+  pageInfo: PageInfo;
   command: string;
 
   type: "Rectangle" | "Ellipse" | "Polygon";
@@ -20,12 +20,12 @@ type PuiSymbolType = {
   polygon?: { x: number; y: number }[];
 };
 
-export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
+export const symbolBox: { [pageId: string]: PuiSymbolType[] } = {
   "3.1013.1.1": [
     {
       type: "Rectangle",
       command: "previous",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -41,7 +41,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -57,7 +57,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -73,7 +73,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "next",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -89,7 +89,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -105,7 +105,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -121,7 +121,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -137,7 +137,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -153,7 +153,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -169,7 +169,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -185,7 +185,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -201,7 +201,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -217,7 +217,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -233,7 +233,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -249,7 +249,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -265,7 +265,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -281,7 +281,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -297,7 +297,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -313,7 +313,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -331,7 +331,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -347,7 +347,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -363,7 +363,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -379,7 +379,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -395,7 +395,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -411,7 +411,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -427,7 +427,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -443,7 +443,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -459,7 +459,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -475,7 +475,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -491,7 +491,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -507,7 +507,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -523,7 +523,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -539,7 +539,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -555,7 +555,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -571,7 +571,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -587,7 +587,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -605,7 +605,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -621,7 +621,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -637,7 +637,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -653,7 +653,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -669,7 +669,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -685,7 +685,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -701,7 +701,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -717,7 +717,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -733,7 +733,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -749,7 +749,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -765,7 +765,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -781,7 +781,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -797,7 +797,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -813,7 +813,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -829,7 +829,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -845,7 +845,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -861,7 +861,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -877,7 +877,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -893,7 +893,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -909,7 +909,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -925,7 +925,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -941,7 +941,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -957,7 +957,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -973,7 +973,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -989,7 +989,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1005,7 +1005,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1021,7 +1021,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1037,7 +1037,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1053,7 +1053,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1069,7 +1069,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1085,7 +1085,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1101,7 +1101,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1117,7 +1117,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1133,7 +1133,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1149,7 +1149,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1165,7 +1165,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1181,7 +1181,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1197,7 +1197,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1213,7 +1213,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1229,7 +1229,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1245,7 +1245,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1261,7 +1261,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1277,7 +1277,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1293,7 +1293,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1309,7 +1309,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1325,7 +1325,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1341,7 +1341,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1357,7 +1357,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1373,7 +1373,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1389,7 +1389,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1405,7 +1405,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1421,7 +1421,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1437,7 +1437,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1453,7 +1453,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1469,7 +1469,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1485,7 +1485,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1501,7 +1501,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1517,7 +1517,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1533,7 +1533,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1549,7 +1549,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1565,7 +1565,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1581,7 +1581,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1597,7 +1597,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1613,7 +1613,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1629,7 +1629,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1645,7 +1645,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1661,7 +1661,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1677,7 +1677,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1693,7 +1693,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1709,7 +1709,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1725,7 +1725,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1741,7 +1741,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1757,7 +1757,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1773,7 +1773,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1789,7 +1789,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1805,7 +1805,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1821,7 +1821,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1837,7 +1837,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1853,7 +1853,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1869,7 +1869,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1885,7 +1885,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1901,7 +1901,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1917,7 +1917,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1933,7 +1933,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1949,7 +1949,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1965,7 +1965,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1981,7 +1981,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -1997,7 +1997,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2013,7 +2013,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2029,7 +2029,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2045,7 +2045,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2061,7 +2061,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2077,7 +2077,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2093,7 +2093,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2109,7 +2109,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2125,7 +2125,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2141,7 +2141,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2157,7 +2157,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2173,7 +2173,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2189,7 +2189,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2205,7 +2205,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2221,7 +2221,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2239,7 +2239,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_brush",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2255,7 +2255,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2271,7 +2271,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2287,7 +2287,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2303,7 +2303,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2319,7 +2319,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2335,7 +2335,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_in",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2351,7 +2351,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_out",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2367,7 +2367,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "fit",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2383,7 +2383,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "full",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2399,7 +2399,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "star",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2415,7 +2415,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "applause",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2431,7 +2431,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "drum",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2447,7 +2447,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "correct",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2463,7 +2463,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "fail",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2479,7 +2479,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "wrong",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2495,7 +2495,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_down",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2511,7 +2511,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2527,7 +2527,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2543,7 +2543,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_up",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2559,7 +2559,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "previous",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2575,7 +2575,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camopacity_up",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2591,7 +2591,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2607,7 +2607,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camopacity_down",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2623,7 +2623,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2639,7 +2639,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2655,7 +2655,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "screen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2671,7 +2671,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2687,7 +2687,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2703,7 +2703,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "next",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2719,7 +2719,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2735,7 +2735,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2753,7 +2753,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FF6C00E2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2769,7 +2769,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FFFFD001",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2785,7 +2785,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FFFF0200",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2801,7 +2801,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.9",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2817,7 +2817,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FF012EE2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2833,7 +2833,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FF3CDD00",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2849,7 +2849,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FF00ABEB",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2865,7 +2865,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2881,7 +2881,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FFFF6500",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2897,7 +2897,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "1.7",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2913,7 +2913,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FFE5E5E5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2929,7 +2929,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#AAAAAA",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2945,7 +2945,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2961,7 +2961,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2977,7 +2977,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "#FF000000",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -2995,7 +2995,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3011,7 +3011,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "1.7",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3027,7 +3027,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3043,7 +3043,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFE5E5E5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3059,7 +3059,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF000000",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3075,7 +3075,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFFD001",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3091,7 +3091,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#AAAAAA",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3107,7 +3107,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF3CDD00",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3123,7 +3123,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF0200",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3139,7 +3139,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF6C00E2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3155,7 +3155,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF00ABEB",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3171,7 +3171,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF6500",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3187,7 +3187,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF012EE2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3205,7 +3205,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "1.7",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3221,7 +3221,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3237,7 +3237,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3253,7 +3253,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF000000",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3269,7 +3269,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#AAAAAA",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3285,7 +3285,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF0200",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3301,7 +3301,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFFD001",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3317,7 +3317,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF012EE2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3335,7 +3335,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFFD001",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3351,7 +3351,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3367,7 +3367,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#AAAAAA",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3383,7 +3383,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF012EE2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3399,7 +3399,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF000000",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3415,7 +3415,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "1.7",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3431,7 +3431,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF0200",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3447,7 +3447,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3465,7 +3465,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFFD001",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3481,7 +3481,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3497,7 +3497,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#AAAAAA",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3513,7 +3513,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF012EE2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3529,7 +3529,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF000000",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3545,7 +3545,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "1.7",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3561,7 +3561,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF0200",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3577,7 +3577,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3595,7 +3595,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "start_ppt",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3611,7 +3611,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "mode_ppt",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3627,7 +3627,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "ppt_pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3643,7 +3643,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "ppt_highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3659,7 +3659,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "ppt_eraser",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3675,7 +3675,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "ppt_math",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3691,7 +3691,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "ppt_previous",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3707,7 +3707,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "ppt_next",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3723,7 +3723,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "mode_screenshare",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3739,7 +3739,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "screenshot",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3755,7 +3755,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "mute",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3771,7 +3771,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "open_chat",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3787,7 +3787,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "leave_meeting",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3803,7 +3803,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Ellipse",
       command: "start_meeting",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3821,7 +3821,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "1.7",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3837,7 +3837,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF6C00E2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3853,7 +3853,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF3CDD00",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3869,7 +3869,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3885,7 +3885,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF000000",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3901,7 +3901,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#AAAAAA",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3917,7 +3917,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "0.5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3933,7 +3933,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFE5E5E5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3949,7 +3949,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFFD001",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3965,7 +3965,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF00ABEB",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3981,7 +3981,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF012EE2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -3997,7 +3997,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF6500",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4013,7 +4013,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF0200",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4031,7 +4031,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4047,7 +4047,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4063,7 +4063,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4079,7 +4079,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4095,7 +4095,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "full",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4111,7 +4111,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_out",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4127,7 +4127,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_in",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4143,7 +4143,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "fit",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4161,7 +4161,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4177,7 +4177,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "full",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4193,7 +4193,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "previous",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4209,7 +4209,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_up",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4225,7 +4225,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4241,7 +4241,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_down",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4257,7 +4257,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "fit",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4273,7 +4273,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_in",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4289,7 +4289,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "next",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4305,7 +4305,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_out",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4321,7 +4321,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_brush",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4337,7 +4337,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "add_page",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4353,7 +4353,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4369,7 +4369,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "rotate_page",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4385,7 +4385,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4401,7 +4401,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4417,7 +4417,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4433,7 +4433,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFE5E5E5",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4449,7 +4449,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFAAAAAA",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4465,7 +4465,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF000000",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4481,7 +4481,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF6C00E2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4497,7 +4497,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF012EE2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4513,7 +4513,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFFD001",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4529,7 +4529,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF0200",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4545,7 +4545,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FFFF6500",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4561,7 +4561,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF00ABEB",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4577,7 +4577,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "#FF3CDD00",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4593,7 +4593,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "menu_grida",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4609,7 +4609,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "hide_stroke",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4625,7 +4625,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pointer",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4643,7 +4643,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "redo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4659,7 +4659,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "finish",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4675,7 +4675,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "highlighter",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4691,7 +4691,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "full",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4707,7 +4707,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "previous",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4723,7 +4723,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "star",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4739,7 +4739,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_up",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4755,7 +4755,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "pen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4771,7 +4771,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "white",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4787,7 +4787,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "red",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4803,7 +4803,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "wrong",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4819,7 +4819,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "screen",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4835,7 +4835,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "drum",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4851,7 +4851,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camopacity_down",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4867,7 +4867,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camera",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4883,7 +4883,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "yellow",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4899,7 +4899,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "green",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4915,7 +4915,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "correct",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4931,7 +4931,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "undo",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4947,7 +4947,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "black",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4963,7 +4963,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_down",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4979,7 +4979,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "camopacity_up",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -4995,7 +4995,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "fit",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5011,7 +5011,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_in",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5027,7 +5027,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "lightblue",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5043,7 +5043,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "next",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5059,7 +5059,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "record",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5075,7 +5075,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "zoom_out",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5091,7 +5091,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_brush",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5107,7 +5107,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "applause",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5123,7 +5123,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "fail",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5139,7 +5139,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "erase_all",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5155,7 +5155,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_1",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5171,7 +5171,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_2",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,
@@ -5187,7 +5187,7 @@ export const symbolBox: { [sobp_str: string]: PuiSymbolType[] } = {
     {
       type: "Rectangle",
       command: "strokesize_3",
-      sobp: {
+      pageInfo: {
         section: 3,
         owner: 1013,
         book: 1,

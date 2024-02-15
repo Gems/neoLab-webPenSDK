@@ -1,5 +1,5 @@
 import $ from "jquery";
-import { PageInfo, Paper } from "../Util/type";
+import {PageInfo, Paper} from "../Util/type";
 // import GenericPuiNproj from "./nproj/note_3_1013_1.json";
 // import GridaPuiNproj from "./nproj/3_1013_1116_Grida.json";
 // import PaperTubePuiNproj from "./nproj/papertube_controller_171117.json";
@@ -8,7 +8,7 @@ import GenericPuiNproj from "./nproj/note_3_1013_1.nproj";
 import GridaPuiNproj from "./nproj/3_1013_1116_Grida.nproj";
 import PaperTubePuiNproj from "./nproj/papertube_controller_171117.nproj";
 import SmartClassKitPuiProj from "./nproj/SmartClassKit_Controller.nproj";
-import { symbolBox } from "./symbolBox";
+import {buildPageId} from "../Util/utils";
 
 const PU_TO_NU = 0.148809523809524;
 
@@ -17,7 +17,7 @@ const predefinedPuiGroup = [GenericPuiNproj, GridaPuiNproj, PaperTubePuiNproj, S
 let _puiInstance: PUIController = null;
 
 export type PuiSymbolType = {
-  sobp: PageInfo;
+  pageInfo: PageInfo;
   command: string;
 
   type: "Rectangle" | "Ellipse" | "Polygon" | "Custom"; // string,
@@ -45,7 +45,7 @@ export type PuiSymbolType = {
 };
 
 type NprojPageJson = {
-  sobp: PageInfo;
+  pageInfo: PageInfo;
   crop_margin: { left: number; top: number; right: number; bottom: number };
   size_pu: { width: number; height: number };
   nu: { Xmin: number; Ymin: number; Xmax: number; Ymax: number };
@@ -79,57 +79,24 @@ type NprojJson = {
 
 export function isPUI(pageInfo: PageInfo): boolean {
   const { owner, book, page } = pageInfo;
-  if (owner === 27 && book === 161 && page === 1) {
-    return true;
-  }
 
-  if (owner === 1013 && (book === 1 || book === 1116)) {
-    // page === 4, Smart plate
-    // page === 1, Plate paper
-    return true;
-  }
-
-  return false;
+  return (owner === 27 && book === 161 && page === 1)
+      // page === 4, Smart plate
+      // page === 1, Plate paper
+      || (owner === 1013 && (book === 1 || book === 1116));
 }
 
-export function isPUIOnPage(sobp: Paper, x: number, y: number): boolean {
-  const pageInfo = { section: sobp.section, owner: sobp.owner, book: sobp.note, page: sobp.page };
-
-  const sobpStr = makeNPageIdStr(pageInfo);
+export function isPUIOnPage(paper: Paper, x: number, y: number): boolean {
+  const pageInfo = { section: paper.section, owner: paper.owner, book: paper.note, page: paper.page };
+  const pageId = buildPageId(pageInfo);
   const pc = PUIController.getInstance();
-  const isInclude = Object.keys(pc._onlyPageSymbols).includes(sobpStr);
+  const isInclude = Object.keys(pc._onlyPageSymbols).includes(pageId);
 
   if (isInclude) {
-    const sobp = {
-      section: pageInfo.section,
-      owner: pageInfo.owner,
-      note: pageInfo.book,
-      page: pageInfo.page,
-    };
-    const point_nu = {
-      x,
-      y,
-    };
-    return pc.checkPuiCommand(sobp, point_nu);
+    const point_nu = {x, y};
+    return pc.checkPuiCommand(paper, point_nu);
   }
   return false;
-}
-
-function makeNPageIdStr(pageInfo: PageInfo, separator = ".") {
-  if (pageInfo) {
-    const { section, owner, book, page } = pageInfo;
-
-    if (page !== undefined) return `${section}${separator}${owner}${separator}${book}${separator}${page}`;
-
-    if (book !== undefined) return `${section}${separator}${owner}${separator}${book}`;
-
-    if (owner !== undefined) return `${section}${separator}${owner}`;
-
-    if (section !== undefined) return `${section}`;
-
-    return `${section}${separator}${owner}${separator}${book}${separator}${page}`;
-  }
-  return `${pageInfo}`;
 }
 
 function insidePolygon(point: { x: number; y: number }, vs: { x: number; y: number }[]) {
@@ -139,37 +106,70 @@ function insidePolygon(point: { x: number; y: number }, vs: { x: number; y: numb
   const { x, y } = point;
 
   let inside = false;
+
   for (let i = 0, j = vs.length - 1, l = vs.length; i < l; j = i++) {
     const { x: xi, y: yi } = vs[i];
     const { x: xj, y: yj } = vs[j];
 
     const intersect = yi > y != yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
+
+    if (intersect)
+      inside = !inside;
   }
 
   return inside;
 }
 
 function insideRectangle(
-  point: { x: number; y: number },
-  rc: { left: number; top: number; width: number; height: number }
-) {
+    point: { x: number; y: number },
+    rc: { left: number; top: number; width: number; height: number }) {
+
   return point.x >= rc.left && point.x <= rc.left + rc.width && point.y >= rc.top && point.y <= rc.top + rc.height;
 }
 
-function insideEllipse(point: { x: number; y: number }, el: { x: number; y: number; width: number; height: number }) {
+function insideEllipse(
+    point: { x: number; y: number }, el: { x: number; y: number; width: number; height: number }) {
+
   const p = Math.pow(point.x - el.x, 2) / Math.pow(el.width, 2) + Math.pow(point.y - el.y, 2) / Math.pow(el.height, 2);
   return p <= 1;
 }
 
-export default class PUIController {
-  private _pageSymbols: { [sobp_str: string]: PuiSymbolType[] } = {};
+function parseKeyValue(text: string | null): { [key: string]: string } {
+  if (!text)
+    return undefined;
 
-  public _onlyPageSymbols: { [sobp_str: string]: PuiSymbolType[] } = {};
+  const answer: { [key: string]: string } = {};
+  const keyValue = text.split("=");
+  answer[keyValue[0]] = keyValue[1];
+
+  return answer;
+}
+
+const regexUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const regexBrackets = /^\{.*}$/;
+
+function isValidResourceIdFormat(id: string) {
+  // '{9e3b1b11-1b1e-42be-8684-40679918ebc9}' ==> true
+  // '9e3b1b11-1b1e-42be-8684-40679918ebc9' ==> true
+  // '{any string}' ==> true
+
+  return regexBrackets.test(id) || regexUUID.test(id);
+}
+
+const qvCommandFormat = /^qv/i;
+
+function isNotQuickViewCommand(command: string) {
+  return !qvCommandFormat.test(command);
+}
+
+export default class PUIController {
+  private _pageSymbols: { [pageId: string]: PuiSymbolType[] } = {};
+
+  public _onlyPageSymbols: { [pageId: string]: PuiSymbolType[] } = {};
   private _onlyPageResources: { [id: string]: string } = {};
   private _onlyPageSymbolFlag: boolean = false;
 
-  private _ready: Promise<void>;
+  private readonly _ready: Promise<void>;
 
   constructor() {
     // this._ready = this.readPredefinedSymbolsByJSON();
@@ -185,29 +185,32 @@ export default class PUIController {
   }
 
   /**
-   * 플레이트와 같이 항상 고정된 SOBP 를 가지고 상품화된 제품(개수가 적다. 그렇기에 SDK 내 저장 가능)에 관한 nproj 를 파싱하고 저장하는 함수
+   * Parsing and saving function for nproj related to products with a fixed SOBP (Same Old Base Plate)
+   * like a plate that is always fixed.
    */
   private readPredefinedSymbolsByXML = async () => {
     for (const url of predefinedPuiGroup) {
-      // nproj 파일에서 symbol을 받는다.
+      // Retrieve symbols from an nproj file
       const { symbols } = await this.getPuiXML(url);
 
-      // 해당 페이지에 symbol을 넣고,
+      // Insert symbols into the corresponding page
       for (const s of symbols) {
-        const idStr = makeNPageIdStr(s.sobp);
-        if (!this._pageSymbols[idStr]) this._pageSymbols[idStr] = [];
-        this._pageSymbols[idStr].push(s);
+        const idStr = buildPageId(s.pageInfo);
+        const symbols = (this._pageSymbols[idStr] ?? (this._pageSymbols[idStr] = []));
+
+        symbols.push(s);
 
         // if (!commands.includes(s.command)) commands.push(s.command);
       }
     }
   };
+
   // private readPredefinedSymbolsByJSON = async () => {
   //   for (const json of predefinedPuiGroup) {
   //     const symbols = await this.getPuiJSON(json);
 
   //     for (const s of symbols) {
-  //       const idStr = makeNPageIdStr(s.sobp);
+  //       const idStr = buildPageId(s.pageInfo);
   //       if (!this._pageSymbols[idStr]) this._pageSymbols[idStr] = [];
   //       this._pageSymbols[idStr].push(s);
   //     }
@@ -215,9 +218,10 @@ export default class PUIController {
   // };
 
   /**
-   * 수없이 많은 노트와 같이 서버에 저장하고 받아와야하는 제품에 관한 nproj 를 파싱하고 저장하는 함수
-   * @param nprojJson
-   * @param page 해당 노트의 특정 페이지
+   * Parsing and saving function for nproj related to products that need to be stored and retrieved
+   * from the server, such as numerous notes.
+   * @param {string} url
+   * @param {number} page - The specific page of the note
    */
   private readPageSymbols = async (url: string, page: number) => {
     const { symbols, resources } = await this.getPuiXML(url);
@@ -226,77 +230,58 @@ export default class PUIController {
 
     for (let j = 0, l2 = symbols.length; j < l2; j++) {
       const s = symbols[j];
-      if (s.sobp.page === page) {
-        const idStr = makeNPageIdStr(s.sobp);
+
+      if (s.pageInfo.page === page) {
+        const idStr = buildPageId(s.pageInfo);
         if (!this._onlyPageSymbols[idStr]) this._onlyPageSymbols[idStr] = [];
         this._onlyPageSymbols[idStr].push(s);
       }
     }
 
-    if (Object.keys(resources).length) {
+    if (Object.keys(resources).length)
       this._onlyPageResources = resources;
-    }
   };
 
-  public fetchOnlyPageSymbols = async (url: string, sobp: PageInfo) => {
+  public fetchOnlyPageSymbols = async (url: string, pageInfo: PageInfo) => {
     const key = Object.keys(this._onlyPageSymbols)[0];
-    const sobpStr = makeNPageIdStr(sobp);
+    const pageId = buildPageId(pageInfo);
 
-    if (key !== sobpStr) {
-      this.readPageSymbols(url, sobp.page);
-    }
+    if (key !== pageId)
+      await this.readPageSymbols(url, pageInfo.page);
   };
 
-  private isValidResourceIdFormat = (id: string) => {
-    const regexUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    const regexBrackets = /^\{.*\}$/;
+  public checkPuiCommand = (paper: Paper, point_nu: { x: number; y: number }) => {
+    const command = this.getPuiCommand_sync(paper, point_nu);
+    // Commands starting with "qv" (QuickView) are not treated as PUI (Pen User Interface).
+    const isPUI = command && isNotQuickViewCommand(command);
+    this._onlyPageSymbolFlag = isPUI;
 
-    // '{9e3b1b11-1b1e-42be-8684-40679918ebc9}' ==> true
-    // '9e3b1b11-1b1e-42be-8684-40679918ebc9' ==> true
-    // '{any string}' ==> true
-
-    return regexBrackets.test(id) || regexUUID.test(id);
+    return isPUI;
   };
 
-  public checkPuiCommand = (sobp: Paper, point_nu: { x: number; y: number }) => {
-    this._onlyPageSymbolFlag = true;
-    const command = this.getPuiCommand_sync(sobp, point_nu);
-    if (command && !/^qv/i.test(command)) {
-      //qv로 시작하는 커맨드(퀵뷰)는 pui로 취급하지 않음
-      return true;
-    }
-    this._onlyPageSymbolFlag = false;
-    return false;
-  };
-
-  public getPuiCommand = async (sobp: Paper, x: number, y: number) => {
+  public getPuiCommand = async (pageInfo: Paper, x: number, y: number) => {
     await this._ready;
-    const command = this.getPuiCommand_sync(sobp, { x: x, y: y });
+    const command = this.getPuiCommand_sync(pageInfo, { x: x, y: y });
+
     if (command) {
       this._onlyPageSymbolFlag = false;
 
-      if (this.isValidResourceIdFormat(command)) {
-        // Resource(음원 등) 를 이용하는 PUI commnad 일 시 resourcePath를 반환
-        const resourcePath = this._onlyPageResources[command];
-        return resourcePath;
-      } else {
-        return command;
-      }
+      // If the PUI command involves using resources (such as audio), return the resourcePath
+      return isValidResourceIdFormat(command)
+          ? this._onlyPageResources[command]
+          : command;
     }
   };
 
-  private getPuiCommand_sync = (sobp: Paper, point_nu: { x: number; y: number }) => {
-    const pageInfo = { section: sobp.section, owner: sobp.owner, book: sobp.note, page: sobp.page };
+  private getPuiCommand_sync = (paper: Paper, point_nu: { x: number; y: number }) => {
+    const pageInfo = { section: paper.section, owner: paper.owner, book: paper.note, page: paper.page };
+    const pageId = buildPageId(pageInfo);
+    const symbols: { [pageId: string]: PuiSymbolType[] } = this._onlyPageSymbolFlag ? this._onlyPageSymbols : this._pageSymbols;
 
-    let symbols: { [sobp_str: string]: PuiSymbolType[] };
-    if (this._onlyPageSymbolFlag) {
-      symbols = this._onlyPageSymbols;
-    } else {
-      symbols = this._pageSymbols;
-    }
+    const pageSymbols = symbols[pageId];
 
-    const pageSymbols = symbols[makeNPageIdStr(pageInfo)];
-    if (!pageSymbols) return undefined;
+    if (!pageSymbols)
+      return undefined;
 
     for (const s of pageSymbols) {
       switch (s.type) {
@@ -332,34 +317,28 @@ export default class PUIController {
     const nprojXml = await res.text();
     // console.log(nprojXml);
 
-    // book 정보
+    // Book information
     const $bookXml = $(nprojXml).find("book");
     const title = $bookXml.find("title").text();
     const author = $bookXml.find("author").text();
 
+    const segment_info = $bookXml.find("segment_info");
+    const ncode_start_page_str = segment_info.attr("ncode_start_page");
+
     const section = parseInt($bookXml.find("section").text(), 10);
     const owner = parseInt($bookXml.find("owner").text(), 10);
     const book = parseInt($bookXml.find("code").text(), 10);
-    let startPage = parseInt($bookXml.find("start_page").text(), 10);
+    const startPage = ncode_start_page_str
+        ? parseInt(ncode_start_page_str, 10)
+        : parseInt($bookXml.find("start_page").text(), 10);
 
-    const segment_info = $bookXml.find("segment_info");
-    const ncode_start_page_str = segment_info.attr("ncode_start_page");
-    if (ncode_start_page_str) {
-      const start_page_new = parseInt(ncode_start_page_str, 10);
-      startPage = start_page_new;
-    }
     const extra = $bookXml.find("extra_info")?.text();
-    let extra_info = undefined as { [key: string]: string };
-    if (extra_info) {
-      const arr = extra.split("=");
-      extra_info = {};
-      extra_info[arr[0]] = arr[1];
-    }
+    const extra_info = parseKeyValue(extra);
 
     const $pdfXml = $(nprojXml).find("pdf");
     const filename = $pdfXml.find("path").text();
 
-    // page 정보
+    // Page information
     const $pages = $(nprojXml).find("pages");
     const numPages = parseInt($pages.attr("count") || "", 10);
 
@@ -373,25 +352,22 @@ export default class PUIController {
         start_page: startPage,
         extra_info,
       },
-
       pdf: {
         filename,
         numPages,
       },
-
       pages: new Array(numPages),
-
       symbols: [],
-
       resources: {},
     };
 
-    // page item에 대한 처리
+    // Handling of page items
     const $page_items = $pages.find("page_item");
+
     $page_items.each((index: number, page) => {
       const p = $(page);
       const pageDelta = parseInt(p.attr("number") || "index", 10);
-      const sobp = { section, owner, book, page: startPage + pageDelta };
+      const pageInfo = { section, owner, book, page: startPage + pageDelta };
 
       const surface_pu = {
         left: parseFloat(p.attr("x1") || "0"),
@@ -423,19 +399,17 @@ export default class PUIController {
       // const Xmax_physical = (surface_pu.right - padding_pu.right) * PU_TO_NU;
       // const Ymax_physical = (surface_pu.bottom - padding_pu.bottom) * PU_TO_NU;
 
-      // 결과를 push
-      const item: NprojPageJson = {
-        sobp,
+      // Push the result
+      ret.pages[pageDelta] = {
+        pageInfo,
         size_pu,
         nu,
         whole: { x1: surface_pu.left, x2: surface_pu.right, y1: surface_pu.top, y2: surface_pu.bottom },
         crop_margin: crop_margin_pu,
-      };
-
-      ret.pages[pageDelta] = item;
+      } as NprojPageJson;
     });
 
-    // symbol 정보
+    // Symbol information
     const $symbols = $(nprojXml).find("symbols");
     const symbolXml = $symbols.find("symbol");
 
@@ -444,9 +418,9 @@ export default class PUIController {
 
       const pageDelta = parseInt($(sym).attr("page") || "0", 10);
       const page = pageDelta + startPage;
-      const sobp = { section, owner, book, page };
+      const pageInfo = { section, owner, book, page };
 
-      const type: string = $(sym).attr("type") || ""; // 여기서는 Rectangle만 취급한다.
+      const type: string = $(sym).attr("type") || ""; // Only Rectangles are considered here.
       const x = parseFloat($(sym).attr("x") || "");
       const y = parseFloat($(sym).attr("y") || "");
       const width = parseFloat($(sym).attr("width") || "");
@@ -463,7 +437,7 @@ export default class PUIController {
           const puiSymbol: PuiSymbolType = {
             type,
             command,
-            sobp,
+            pageInfo,
             rect_nu: {
               left: x * PU_TO_NU,
               top: y * PU_TO_NU,
@@ -480,7 +454,7 @@ export default class PUIController {
           const puiSymbol: PuiSymbolType = {
             type,
             command,
-            sobp,
+            pageInfo,
             ellipse_nu: {
               x: x * PU_TO_NU,
               y: y * PU_TO_NU,
@@ -497,7 +471,7 @@ export default class PUIController {
           const puiSymbol: PuiSymbolType = {
             type,
             command,
-            sobp,
+            pageInfo,
             custom_nu: {
               left: x * PU_TO_NU,
               top: y * PU_TO_NU,
@@ -519,6 +493,7 @@ export default class PUIController {
 
     const $resources = $(nprojXml).find("resources");
     const resourceXml = $resources.find("resource");
+
     $(resourceXml).each((index, res) => {
       const id = $(res).find("id").text();
       const path = $(res).find("path").text();
@@ -532,21 +507,20 @@ export default class PUIController {
 
   private getPuiJSON = async (json: PuiJSON) => {
     const symbols: PuiSymbolType[] = [];
-
     const nprojJson = json.nproj;
 
-    // book 정보
+    // book information
     const bookJson = nprojJson.book;
     const section = parseInt(bookJson[0].section.toString());
     const owner = parseInt(bookJson[0].owner.toString());
     const book = parseInt(bookJson[0].code.toString());
     const startPage = parseInt(bookJson[0].start_page[0]._);
 
-    // page 정보
+    // page information
     const pageJson = nprojJson.pages;
     const numPages = parseInt(pageJson[0].$.count);
 
-    // symbol 정보
+    // symbol information
     const symbolsJson = nprojJson.symbols;
     const symbolJson = symbolsJson[0].symbol;
 
@@ -554,7 +528,7 @@ export default class PUIController {
       // console.log(sym.outerHTML);
 
       const pageDelta = parseInt(sym.$.page);
-      const type: string = sym.$.type; // 여기서는 Rectangle만 취급한다.
+      const type: string = sym.$.type; // Only Rectangles are considered here.
       const x = parseFloat(sym.$.x);
       const y = parseFloat(sym.$.y);
       const width = parseFloat(sym.$.width);
@@ -563,14 +537,14 @@ export default class PUIController {
       const command: string = sym.command[0].$.param;
 
       const page = pageDelta + startPage;
-      const sobp = { section, owner, book, page };
+      const pageInfo = { section, owner, book, page };
 
       switch (type) {
         case "Rectangle": {
           const puiSymbol: PuiSymbolType = {
             type,
             command,
-            sobp,
+            pageInfo,
             rect_nu: {
               left: x * PU_TO_NU,
               top: y * PU_TO_NU,
@@ -586,7 +560,7 @@ export default class PUIController {
           const puiSymbol: PuiSymbolType = {
             type,
             command,
-            sobp,
+            pageInfo,
             ellipse_nu: {
               x: x * PU_TO_NU,
               y: y * PU_TO_NU,

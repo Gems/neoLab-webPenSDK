@@ -1,13 +1,14 @@
-import { ProfileType } from "../API/PenMessageType";
-import { Packet } from "../PenCotroller/Packet";
-import { toHexString, GetSectionOwner } from "../Util/ByteUtil";
+import {ProfileType} from "../API/PenMessageType";
+import {Packet} from "../PenController/Packet";
+import {GetSectionOwner, toHexString} from "../Util/ByteUtil";
+import {PenConfigurationInfo, PenPointer, VersionInfo} from "../Util/type";
 
 /**
- * 펜에서 반환된, 디바이스 버전(정보) 패킷을 파싱하는 함수
+ * The function that parses the returned device version (information) packet from the pen.
  * @param {Packet} packet
  * @returns
  */
-export function VersionInfo(packet: Packet) {
+export function versionInfo(packet: Packet) {
   const DeviceName = packet.GetString(16);
   const FirmwareVersion = packet.GetString(16);
   const ProtocolVersion = packet.GetString(8);
@@ -16,7 +17,7 @@ export function VersionInfo(packet: Packet) {
   const MacAddress = toHexString(packet.GetBytes(6));
   const PressureSensorType = packet.GetByte();
 
-  const versionInfo = {
+  return {
     DeviceName,
     FirmwareVersion,
     ProtocolVersion,
@@ -24,46 +25,45 @@ export function VersionInfo(packet: Packet) {
     DeviceType,
     MacAddress,
     PressureSensorType,
-  };
-  return versionInfo;
+  } as VersionInfo;
 }
 
 /**
- * 펜에서 반환된, 펜 설정 정보 패킷을 파싱하는 함수
+ * A function that parses the pen configuration information packet returned from the pen.
  * @param {Packet} packet
  * @returns
  */
-export function SettingInfo(packet: Packet) {
-  // 비밀번호 사용 여부
-  let lockyn = packet.GetByte() === 1;
-  // 비밀번호 입력 최대 시도 횟수
-  let pwdMaxRetryCount = packet.GetByte();
-  // 비밀번호 입력 시도 횟수
-  let pwdRetryCount = packet.GetByte();
-  // 1970년 1월 1일부터 millisecond tick
-  let time = packet.GetLong();
-  // 사용하지 않을때 자동으로 전원이 종료되는 시간 (단위:분)
-  let autoPowerOffTime = packet.GetShort();
-  // 최대 필압
-  let maxForce = packet.GetShort();
-  // 현재 메모리 사용량
-  let usedStorage = packet.GetByte();
-  // 펜의 뚜껑을 닫아서 펜의 전원을 차단하는 기능 사용 여부
-  let penCapOff = packet.GetByte() === 1;
-  // 전원이 꺼진 펜에 필기를 시작하면 자동으로 펜의 켜지는 옵션 사용 여부
-  let autoPowerON = packet.GetByte() === 1;
-  // 사운드 사용여부
-  let beep = packet.GetByte() === 1;
-  // 호버기능 사용여부
-  let hover = packet.GetByte() === 1;
-  // 남은 배터리 수치
-  let batteryLeft = packet.GetByte();
-  // 오프라인 데이터 저장 기능 사용 여부
-  let useOffline = packet.GetByte() === 1;
-  // 필압 단계 설정 (0~4) 0이 가장 민감
-  let fsrStep = packet.GetByte();
+export function penConfigurationInfo(packet: Packet) {
+  // Whether to use a password
+  const lockyn = packet.GetByte() === 1;
+  // Maximum number of password input attempts
+  const pwdMaxRetryCount = packet.GetByte();
+  // Password entry attempt count
+  const pwdRetryCount = packet.GetByte();
+  // Millisecond tick since January 1, 1970
+  const time = packet.GetLong();
+  // Time (in minutes) until automatic power-off when not in use
+  const autoPowerOffTime = packet.GetShort();
+  // Maximum pressure sensitivity
+  const maxForce = packet.GetShort();
+  // Current memory usage
+  const usedStorage = packet.GetByte();
+  // Whether the pen's power is automatically turned off by closing the pen cap
+  const penCapOff = packet.GetByte() === 1;
+  // Whether the pen automatically turns on when starting to write on a turned-off pen
+  const autoPowerON = packet.GetByte() === 1;
+  // Whether sound is enabled
+  const beep = packet.GetByte() === 1;
+  // Whether hover functionality is enabled
+  const hover = packet.GetByte() === 1;
+  // Remaining battery level
+  const batteryLeft = packet.GetByte();
+  // Whether offline data storage is enabled
+  const useOffline = packet.GetByte() === 1;
+  // Pressure sensitivity step setting (0~4) where 0 is the most sensitive
+  const fsrStep = packet.GetByte();
 
-  let settingInfo = {
+  return {
     Locked: lockyn,
     ResetCount: pwdMaxRetryCount,
     RetryCount: pwdRetryCount,
@@ -78,148 +78,140 @@ export function SettingInfo(packet: Packet) {
     HoverMode: hover,
     Beep: beep,
     PenSensitivity: fsrStep,
-  };
-
-  return settingInfo;
+  } as PenConfigurationInfo;
 }
 
 /**
- * 펜에서 반환된, 펜 설정 변경의 성공여부를 파싱하는 함수
+ * Parsing function for the success status of pen configuration changes returned by the pen
  * @param {Packet} packet
- * @returns {{number, boolean}}
+ * @returns {{SettingType: number, result: boolean}}
  */
-export function SettingChange(packet: Packet) {
-  let SettingType = packet.GetByte();
-  let result = packet.GetByte() === 0;
-  return { SettingType, result };
+export function SettingChange(packet: Packet): { settingType: number; result: boolean; } {
+  const settingType = packet.GetByte();
+  const result = packet.GetByte() === 0;
+
+  return { settingType, result };
 }
 
 /**
- * 펜에서 반환된, 입력된 비밀번호 결과 값을 파싱하는 함수
- * @param {Packet} packet
- * @returns {{number, number, number}} - status: 0 = 비밀번호 필요 / 1 = 비밀번호 불요 or 비밀번호 성공 / 2 = 입력한도초과리셋 / 3 = 오류
+ * Parsing function for the result of the entered password returned by the pen.
+ * @param {Packet} packet - The packet containing the password result
+ * @returns {{status: number, retryCount: number, resetCount: number}} - status: 0 = Password required / 1 = Password not required or Password success / 2 = Exceeded input limit, reset / 3 = Error
  */
-export function Password(packet: Packet) {
-  let status = packet.GetByte();
-  let RetryCount = packet.GetByte();
-  let ResetCount = packet.GetByte();
-  return { status, RetryCount, ResetCount };
+export function Password(packet: Packet): { status: number; retryCount: number; resetCount: number; } {
+  const status = packet.GetByte();
+  const retryCount = packet.GetByte();
+  const resetCount = packet.GetByte();
+
+  return { status, retryCount, resetCount };
 }
 
 /**
- * 펜에서 반환된, 패스워드 변경 결과 값을 파싱하는 함수
- * @param {Packet} packet
- * @returns {{number, number, number}} - status: 0 = 성공 / 1 = 기존비밀번호 불일치 / 2 = 입력한도초과리셋 / 3 = 오류
+ * Parsing function for the result of password change returned by the pen
+ * @param {Packet} packet - The packet containing the password change result
+ * @returns {{retryCount: number, resetCount:number, status: number}} - status: 0 = Success / 1 = Incorrect old password / 2 = Exceeded input limit, reset / 3 = Error
  */
-export function PasswordChange(packet: Packet) {
-  let RetryCount = packet.GetByte();
-  let ResetCount = packet.GetByte();
-  let status = packet.GetByte();
-  return { RetryCount, ResetCount, status };
+export function PasswordChange(packet: Packet): { status: number; retryCount: number; resetCount: number; } {
+  const retryCount = packet.GetByte();
+  const resetCount = packet.GetByte();
+  const status = packet.GetByte();
+
+  return { status, retryCount, resetCount };
 }
 
 /**
- * PDS용 좌표 데이터 파싱하는 함수
- * @param {Packet} packet
- * @returns
+ * Parsing function for coordinate data for PDS (Pen Display System)
+ * @param {Packet} packet - The packet containing the coordinate data
+ * @returns {Object} - Parsed coordinate data
  */
-export function PDS(packet: Packet) {
-  let owner = packet.GetInt();
-  let section = packet.GetInt();
-  let note = packet.GetInt();
-  let page = packet.GetInt();
-  let x = packet.GetInt();
-  let y = packet.GetInt();
-  let fx = packet.GetShort();
-  let fy = packet.GetShort();
+export function PDS(packet: Packet): PenPointer {
+  const owner = packet.GetInt();
+  const section = packet.GetInt();
+  const note = packet.GetInt();
+  const page = packet.GetInt();
+  const x = packet.GetInt();
+  const y = packet.GetInt();
+  const fx = packet.GetShort();
+  const fy = packet.GetShort();
+
   return { section, owner, note, page, x, y, fx, fy };
 }
 
 /**
- * 펜에서 반환된, 오프라인 데이터의 종이정보(section, owner, note) 리스트를 파싱하는 함수
- * @param {Packet} packet
- * @returns {array}
+ * Parsing function for the list of paper information (section, owner, note) of offline data returned by the pen
+ * @param {Packet} packet - The packet containing the paper information list
+ * @returns {Array} - Array of parsed paper information objects
  */
-export function NoteList(packet: Packet) {
-  let length = packet.GetShort();
-  let result = [];
-  for (var i = 0; i < length; i++) {
-    let rb = packet.GetBytes(4);
-    let [section, owner] = GetSectionOwner(rb);
-    let note = packet.GetInt();
-
-    result.push({ Section: section, Owner: owner, Note: note });
-  }
-  return result;
-}
-
-/**
- * 펜에서 반환된, 오프라인 데이터의 종이정보(page) 리스트를 파싱하는 함수
- * @param {Packet} packet
- * @returns {array}
- */
-export function PageList(packet: Packet) {
-  let rb = packet.GetBytes(4);
-  let [section, owner] = GetSectionOwner(rb);
-  let note = packet.GetInt();
-  let length = packet.GetShort();
-  let pages = [];
+export function NoteList(packet: Packet): Array<{ section: number, owner: number, note: number }> {
+  const length = packet.GetShort();
+  const result = [];
 
   for (let i = 0; i < length; i++) {
-    pages.push(packet.GetInt());
+    const rb = packet.GetBytes(4);
+    const  { section, owner } = GetSectionOwner(rb);
+    const note = packet.GetInt();
+
+    result.push({ section, owner, note });
   }
 
-  let result = {
-    Section: section,
-    Owner: owner,
-    Note: note,
-    Pages: pages,
-  };
   return result;
 }
 
 /**
- * 펜에서 반환된, 프로파일 데이터를 파싱하는 함수
- * @param {Packet} packet
- * @returns - status: 0 = 성공 / 1 = 실패 / 10 = 프로파일 이미 존재 / 11 = 프로파일 없음 / 21 = 프로파일 내 key 없음 / 30 = 권한없음 (비밀번호 틀림) / 40 = 버퍼 크기 맞지 않음
+ * Parsing function for the list of paper information (page) of offline data returned by the pen
+ * @param {Packet} packet - The packet containing the paper information list
+ * @returns {Array} - Array of parsed page information objects
  */
-export const ProfileData = (packet: Packet) => {
+export function PageList(packet: Packet): { section: number, owner: number, note: number, pages: number[] } {
+  const rb = packet.GetBytes(4);
+  const { section, owner } = GetSectionOwner(rb);
+  const note = packet.GetInt();
+  const length = packet.GetShort();
+  const pages = [];
+
+  for (let i = 0; i < length; i++)
+    pages.push(packet.GetInt());
+
+ return { section, owner, note, pages, };
+}
+
+/**
+ * Parsing function for the profile data returned by the pen
+ * @param {Packet} packet - The packet containing the profile data
+ * @returns {Object} - Object with status indicating the result of the profile data parsing
+ *                   - status: 0 = Success / 1 = Failure / 10 = Profile already exists / 11 = No profile found /
+ *                             21 = Key not found in the profile / 30 = Unauthorized (Incorrect password) / 40 = Buffer size mismatch
+ */
+export const ProfileData = (packet: Packet): object => {
   const profileName = packet.GetString(8);
   const ptype = packet.GetByte();
 
-  let status = 0;
-  let keyCount = 0;
-  let key = "";
-  let values = [];
-  let result: any = {
+  const values = [];
+  const result: any = {
     profileName: profileName,
     type: "0x" + ptype.toString(16),
   };
 
+  let keyCount = 0;
+  let key = "";
+  let status = 0;
+
   switch (ptype) {
     case ProfileType.CreateProfile:
-      status = packet.GetByte();
-
-      result.status = "0x" + status.toString(16);
+      result.status = "0x" + packet.GetByte().toString(16);
       break;
     case ProfileType.DeleteProfile:
-      status = packet.GetByte();
-
-      result.status = "0x" + status.toString(16);
+      result.status = "0x" + packet.GetByte().toString(16);
       break;
+
     case ProfileType.InfoProfile:
-      status = packet.GetByte();
-      const allSectorCount = packet.GetShort();
-      const sectorSize = packet.GetShort();
-      const usedSectorCount = packet.GetShort();
-      const usedKeySectorCount = packet.GetShort();
-
-      result.status = "0x" + status.toString(16);
-      (result.allSectorCount = allSectorCount),
-        (result.sectorSize = sectorSize),
-        (result.usedSectorCount = usedSectorCount),
-        (result.usedKeySectorCount = usedKeySectorCount);
+      result.status = "0x" + packet.GetByte().toString(16);
+      result.allSectorCount = packet.GetShort();
+      result.sectorSize = packet.GetShort();
+      result.usedSectorCount = packet.GetShort();
+      result.usedKeySectorCount = packet.GetShort();
       break;
+
     case ProfileType.WriteProfileValue:
       keyCount = packet.GetByte();
 
@@ -229,8 +221,10 @@ export const ProfileData = (packet: Packet) => {
         values.push({ key: key, status: "0x" + status.toString(16) });
       }
 
-      (result.keyCount = keyCount), (result.values = values);
+      result.keyCount = keyCount;
+      result.values = values;
       break;
+
     case ProfileType.ReadProfileValue:
       keyCount = packet.GetByte();
 
@@ -243,8 +237,10 @@ export const ProfileData = (packet: Packet) => {
         values.push({ key: key, status: "0x" + status.toString(16), dataLength: dataLength, data: str });
       }
 
-      (result.keyCount = keyCount), (result.values = values);
+      result.keyCount = keyCount;
+      result.values = values;
       break;
+
     case ProfileType.DeleteProfileValue:
       keyCount = packet.GetByte();
 
@@ -254,7 +250,8 @@ export const ProfileData = (packet: Packet) => {
         values.push({ key: key, status: "0x" + status.toString(16) });
       }
 
-      (result.keyCount = keyCount), (result.values = values);
+      result.keyCount = keyCount;
+      result.values = values;
       break;
   }
 

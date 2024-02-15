@@ -1,7 +1,7 @@
-# Neo smartpen SDK for Web Platform
+# Neo Smartpen SDK for Web Platform
 
 # Web Pen SDK
-This document is written to be used the web_pen_sdk for NeoSmartPen.<br />
+This document is written for using the `web_pen_sdk` for NeoSmartPen.
 
 ## Installation 
 ``` sh
@@ -15,16 +15,16 @@ $ yarn add web_pen_sdk
 ### **PenHelper**
 > scanPen, connectDevice, serviceBinding_16, serviceBinding_128, characteristicBinding, disconnect, dotCallback, handleDot, messageCallback, handleMessage, ncodeToScreen, ncodeToScreen_smartPlate, isSamePage
 
-### [펜 연결 설정/해제]
+### [Pen Connection Setup/Release]
 
 ### 1-1. scanPen
-블루투스 펜 연결을 위해 디바이스를 스캔하는 로직입니다.
+This logic scans devices for Bluetooth pen connection.
 ```ts
-/** This function scans the device for bluetooth pen connection. */
+/** This function scans the device for a Bluetooth pen connection. */
 scanPen = async () => { ... }
 ```
 ```ts
-// Usage with react hook
+// Usage with React hook
 
 const scanPen = () => {
   PenHelper.scanPen();
@@ -34,22 +34,22 @@ const scanPen = () => {
 ```
 
 ### 1-2. connectDevice
-실제 블루투스 장비와의 연결을 시도합니다.
+Attempts to establish a connection with the actual Bluetooth device.
 ```ts
 connectDevice = async (device: any) => { ... }
 ```
 
 ### 1-3. serviceBinding_16, serviceBinding_128
-블루투스 service를 16bit/128bit UUID로 binding 합니다.
+Binds Bluetooth services to 16-bit/128-bit UUIDs.
 ```ts
 serviceBinding_16 = async (service: any, device: any) => { ... }
 serviceBinding_128 = async (service: any, device: any) => { ... }
 ```
 
 ### 1-4. characteristicBinding
-블루투스 펜 장비의 연결이 완료된 후 발생되는 펜 event를 처리하기 위해 PenController를 설정합니다. <br />
-연결된 펜의 정보, Dot 처리 등 모든 펜 event는 PenController를 통해 처리됩니다. <br />
-해당 penController는 PenHelper.pens[] 안에 저장됩니다.
+Sets up the PenController to handle pen events that occur after the Bluetooth pen device is connected.
+All pen events, including information about the connected pen and dot processing, are handled through PenController.
+This penController is stored in PenHelper.pens[].
 ```ts
 characteristicBinding = (read: any, write: any, device: any) => { ... }
 ```
@@ -57,65 +57,65 @@ characteristicBinding = (read: any, write: any, device: any) => { ... }
 // PenHelper.ts
 this.pens = [penController, penController, ...];
 
-// penController 사용씬 2-1 참조
+// Refer to penController usage scene 2-1
 ```
 
 
 ### 1-5. disconnect
-블루투스 장비 연결을 해제합니다.
+Disconnects the Bluetooth device connection.
 ```ts
 disconnect = (penController: any) => { ... }
 ```
 ```ts
-// Usage with react hook
+// Usage with React hook
 
 const disconnectPen = () => {
   PenHelper.disconnect(controller);
 }
 ```
 
-### [펜 이벤트 정보]
+### [Pen Event Information]
 ### 2-1. messageCallback, handleMessage
-블루투스 펜의 이벤트를 처리합니다.
+Handles events from the Bluetooth pen.
 ```ts
 handleMessage = (controller: any, type: any, args: any) => { ... }
 ```
 | Type (Hex) | Title | Description | |
 |-----------|-------|-------------| - |
-| 1 (0x01) | PEN_AUTHORIZED | 펜 인증성공 | - |
-| 2 (0x02) | PEN_PASSWORD_REQUEST | 비밀번호 요청 | - |
-| 4 (0x04) | PEN_DISCONNECTED | 펜 연결해제 | - |
-| 6 (0x06) | PEN_CONNECTION_SUCCESS | 펜 연결 성공 | - |
-| 17 (0x11) | PEN_SETTING_INFO | 펜의 상태정보(배터리, 메모리 등) | 펜 충전시 배터리정보 -> 128 |
-| 18 (0x12) | PEN_SETUP_SUCCESS | 펜 설정 변경 성공 | - |
-| 19 (0x13) | PEN_SETUP_FAILURE | 펜 설정 변경 실패 | - |
-| 26 (0x1a) | PEN_USING_NOTE_SET_RESULT | 실시간 필기 데이터 요청 결과 | - |
-| 82 (0x52) | PASSWORD_SETUP_SUCCESS | 패스워드 설정 성공 | - |
-| 83 (0x53) | PASSWORD_SETUP_FAILURE | 패스워드 설정 실패 | - |
-| 84 (0x54) | PEN_ILLEGAL_PASSWORD_0000 | 신규 패스워드 0000 제한 | - |
-| 99 (0x63) | EVENT_LOW_BATTERY | 배터리 잔량 부족시 이벤트 | - |
-| 100 (0x64) | EVENT_POWER_OFF | 전원 OFF 이벤트 | - |
-| 34 (0x22) | PEN_FW_UPGRADE_STATUS | 펜 펌웨어 업그레이드 상태 | - |
-| 35 (0x23) | PEN_FW_UPGRADE_SUCCESS | 펜 펌웨어 업그레이드 성공 | - |
-| 36 (0x24) | PEN_FW_UPGRADE_FAILURE | 펜 펌웨어 업드레이드 실패 | 1=동일버전/2=공간부족/3=실패/4=압축지원X |
-| 37 (0x25) | PEN_FW_UPGRADE_SUSPEND | 펜 펌웨어 업그레이드 중단 | - |
-| 48 (0x30) | OFFLINE_DATA_NOTE_LIST | 오프라인 데이터 노트 리스트 | - |
-| 49 (0x31) | OFFLINE_DATA_PAGE_LIST | 오프라인 데이터 페이지 리스트 | - |
-| 50 (0x32) | OFFLINE_DATA_SEND_START | 오프라인 데이터 보내기 시작 | - |
-| 51 (0x33) | OFFLINE_DATA_SEND_STATUS | 오프라인 데이터 보내는 상태 | - |
-| 52 (0x34) | OFFLINE_DATA_SEND_SUCCESS | 오프라인 데이터 보내기 성공 | - |
-| 53 (0x35) | OFFLINE_DATA_SEND_FAILURE | 오프라인 데이터 보내기 실패 | - |
-| 165 (0xa5) | OFFLINE_DATA_DELETE_RESPONSE | 오프라인 데이터 삭제 상태 | - |
-| 84 (0x54) | PEN_CONNECTION_FAILURE_BTDUPLICATE | 중복되는 블루투스 펜 연결 시도시 실패 | - |
-| 193 (0xc1) | PEN_PROFILE | 펜의 프로필 | - |
-| 115 (0x73) | RES_PDS | 펜 PDS | - |
-| 104 (0x68) | EVENT_DOT_ERROR | 펜 Dot 이벤트 에러 | - |
-| 105 (0x69) | EVENT_DOT_PUI | 펜 Dot PUI 정보 | - |
-| 244 (0xf4) | RES_LOG_INFO | 펜 로그 정보 | - |
-| 245 (0xf5) | RES_LOG_DATA | 펜 로그 데이터 | - |
+| 1 (0x01) | PEN_AUTHORIZED | Pen authorization successful | - |
+| 2 (0x02) | PEN_PASSWORD_REQUEST | Password request | - |
+| 4 (0x04) | PEN_DISCONNECTED | Pen disconnected | - |
+| 6 (0x06) | PEN_CONNECTION_SUCCESS | Pen connection successful | - |
+| 17 (0x11) | PEN_SETTING_INFO | Pen status information (battery, memory, etc.) | Battery information during pen charging -> 128 |
+| 18 (0x12) | PEN_SETUP_SUCCESS | Pen setup change successful | - |
+| 19 (0x13) | PEN_SETUP_FAILURE | Pen setup change failed | - |
+| 26 (0x1a) | PEN_USING_NOTE_SET_RESULT | Real-time handwriting data request result | - |
+| 82 (0x52) | PASSWORD_SETUP_SUCCESS | Password setup successful | - |
+| 83 (0x53) | PASSWORD_SETUP_FAILURE | Password setup failed | - |
+| 84 (0x54) | PEN_ILLEGAL_PASSWORD_0000 | Restriction on new password 0000 | - |
+| 99 (0x63) | EVENT_LOW_BATTERY | Low battery event | - |
+| 100 (0x64) | EVENT_POWER_OFF | Power off event | - |
+| 34 (0x22) | PEN_FW_UPGRADE_STATUS | Pen firmware upgrade status | - |
+| 35 (0x23) | PEN_FW_UPGRADE_SUCCESS | Pen firmware upgrade successful | - |
+| 36 (0x24) | PEN_FW_UPGRADE_FAILURE | Pen firmware upgrade failed | 1=Same version/2=Space insufficient/3=Failure/4=Compression not supported |
+| 37 (0x25) | PEN_FW_UPGRADE_SUSPEND | Pen firmware upgrade suspended | - |
+| 48 (0x30) | OFFLINE_DATA_NOTE_LIST | Offline data note list | - |
+| 49 (0x31) | OFFLINE_DATA_PAGE_LIST | Offline data page list | - |
+| 50 (0x32) | OFFLINE_DATA_SEND_START | Offline data send start | - |
+| 51 (0x33) | OFFLINE_DATA_SEND_STATUS | Offline data sending status | - |
+| 52 (0x34) | OFFLINE_DATA_SEND_SUCCESS | Offline data send successful | - |
+| 53 (0x35) | OFFLINE_DATA_SEND_FAILURE | Offline data send failed | - |
+| 165 (0xa5) | OFFLINE_DATA_DELETE_RESPONSE | Offline data deletion status | - |
+| 84 (0x54) | PEN_CONNECTION_FAILURE_BTDUPLICATE | Failure when attempting to connect duplicate Bluetooth pens | - |
+| 193 (0xc1) | PEN_PROFILE | Pen profile | - |
+| 115 (0x73) | RES_PDS | Pen PDS | - |
+| 104 (0x68) | EVENT_DOT_ERROR | Pen Dot event error | - |
+| 105 (0x69) | EVENT_DOT_PUI | Pen Dot PUI information | - |
+| 244 (0xf4) | RES_LOG_INFO | Pen log information | - |
+| 245 (0xf5) | RES_LOG_DATA | Pen log data | - |
 
-``` ts
-// Usage with react hook
+```ts
+// Usage with React hook
 
 const [controller, setController] = useState();
 const [penVersionInfo, setPenVersionInfo] = useState();
@@ -125,26 +125,30 @@ useEffect(() => {
   PenHelper.messageCallback = async (mac, type, args) => {
     messageProcess(mac, type, args);
   }
-});
+}, []);
 
 const messageProcess = (mac, type, args) => {
   switch(type) {
     case PenMessageType.PEN_SETTING_INFO:
       const _controller = PenHelper.pens.filter((c) => c.info.MacAddress === mac)[0];
-      setController(_controller);  // 해당 펜의 controller를 등록해준다.
-      setBattery(args.Battery);  // 배터리 상태정보를 저장 -> 충전중일 때 128로 표시
+      setController(_controller);  // Register the controller of the corresponding pen.
+      setBattery(args.Battery);  // Save battery status information -> Display 128 when charging
       ...
-    case PenMessageType.PEN_DISCONNECTED:  // 펜 연결해제시 모든 상태값 초기화
+      break;
+    case PenMessageType.PEN_DISCONNECTED:  // Reset all state values when the pen is disconnected
       setController(null);
       setPenInfo(null);
       setBattery(null);
-    case PenMessageType.PEN_PASSWORD_REQUEST: ...  // 패스워드 요청시 처리
+      break;
+    case PenMessageType.PEN_PASSWORD_REQUEST: ...  // Handling password request
       onPasswordRequired(args);
-    case PenMessageType.PEN_SETUP_SUCCESS:  // 팬 연결 성공시 처리
+      break;
+    case PenMessageType.PEN_SETUP_SUCCESS:  // Processing when pen connection is successful
       if (controller) {
         setPenVersionInfo(controller.info);
       }
       ...
+      break;
   }
 }
 
@@ -154,23 +158,23 @@ const onPasswordRequired = (args: any) => {
   const password = input();
   ...
   if (args.RetryCount >= 10) {
-    alert('펜의 모든정보가 초기화 됩니다.');
+    alert('All information on the pen will be reset.');
   }
   ...
-  controller.InputPassword(password);  // 등록된 펜 controller를 사용하여 비밀번호를 전달한다.
+  controller.InputPassword(password);  // Pass the password using the registered pen controller.
 }
 ...
 ```
 
-### [펜 Dot 처리]
+### [Pen Dot Processing]
 ### 3-1. dotCallback, handleDot
-펜에서 넘어온 dot 데이터는 penController에 등록된 callback 함수인 handleDot을 통해 처리됩니다.
+The dot data coming from the pen is processed through the registered callback function `handleDot` in the penController.
 ```ts
 handleDot = (controller: any, args: any) => { ... }
 ```
 
 ### 3-2. ncodeToScreen
-일반적인 ncode dot 좌표값을 view에 보여지게 하기 위하여 view size에 맞춰 변환시키는 로직입니다.
+This logic is used to convert general ncode dot coordinate values according to the view size so that they can be displayed in the view.
 ```ts
 /**
  * This function is to convert the general ncode dot coordinate values ​​according to the view size in order to be shown in the view.
@@ -186,7 +190,7 @@ ncodeToScreen = (dot: Dot, view: View, paperSize: PaperSize) => {
 ```
 
 ### 3-3. ncodeToScreen_smartPlate
-SmartPlate의 ncode dot 좌표값을 view에 보여지게 하기 위하여 view size에 맞춰 변환시키는 로직입니다.
+This logic is used to convert SmartPlate's ncode dot coordinate values ​​according to the view size so that they can be displayed in the view.
 ```ts
 /**
  * This function is to convert the SmartPlate ncode dot coordinate values ​​according to the view size in order to be shown in the view.
@@ -203,13 +207,13 @@ ncodeToScreen_smartPlate = (dot: Dot, view: View, angle: number, paperSize: Pape
 ```
 
 ```ts
-// Usage with react hook
+// Usage with React hook
 
 useEffect(() => {
   PenHelper.dotCallback = async (mac, dot) => {
     strokeProcess(dot);
   }
-});
+}, []);
 
 const strokeProcess = (dot: Dot) => {
   ...
@@ -226,8 +230,7 @@ const strokeProcess = (dot: Dot) => {
 ```
 
 ### 4. isSamePage
-서로 다른 ncode 페이지 정보(SOBP)를 바탕으로 같은 페이지인지 구별하기 위한 로직입니다. <br />
-SOBP는 페이지를 구별하기 위한 정보로서, Section/Owner/Book/Page의 줄임말입니다.
+Logic to distinguish whether it is the same page based on different ncode page information (SOBP). SOBP is information to distinguish pages and stands for Section/Owner/Book/Page.
 ```ts
 /**
  * This function is to distinguish whether it is the same page based on different ncode page information (SOBP).
@@ -245,8 +248,9 @@ isSamePage = (page1: PageInfo, page2: PageInfo) => {
 
 ### **NoteServer**
 > extractMarginInfo, getNoteImage, setNprojInPuiController
+
 ### 1. extractMarginInfo
-펜으로부터 받은 페이지 정보(SOBP)와 nproj 파일의 url을 바탕으로 해당 ncode 페이지의 margin info를 추출하는 로직입니다.
+This logic extracts the margin info of the ncode page from the nproj based on the pageInfo received from the pen.
 ```ts
 /**
  * This function is to extract the margin info of the ncode page from nproj based on pageInfo.
@@ -261,7 +265,7 @@ const extractMarginInfo = async (url:string | null, pageInfo: PageInfo) => {
 ```
 
 ### 2. getNoteImage
-펜으로부터 받은 페이지 정보(SOBP)를 바탕으로 노트의 이미지를 받아오기 위한 로직입니다.
+This logic is used to retrieve the image of the note based on the pageInfo received from the pen.
 ```ts
 /**
  * This function is to get the note image based on pageInfo.
@@ -276,8 +280,8 @@ const getNoteImage = async (pageInfo: PageInfo, setImageBlobUrl: any) => {
 ```
 
 ### 3. setNprojInPuiController
-펜으로부터 받은 페이지 정보(SOBP)와 nproj 파일의 url을 바탕으로 페이지에 있는 PUI 정보를 PUI Controller 에 저장하는 로직입니다.
-이렇게 등록된 PUI는 스마트펜이 입력될 경우 messageCallback 을 통해 반환됩니다.
+This logic sets the PUI information on the page based on the pageInfo and the url of the nproj file received from the pen.
+Once registered, this PUI will be returned through the messageCallback when a SmartPen is input.
 ```ts
 /**
  * This function is to set the PUI in Page based on pageInfo.
@@ -291,14 +295,14 @@ const setNprojInPuiController  = async (url: string | null, pageInfo: PageInfo) 
 ```
 
 ```ts
-// Usage with react hook
+// Usage with React hook
 
 const [imageBlobUrl, setImageBlobUrl] = useState<string>();
 const [paperSize, setPaperSize] = useState<PaperSize>();
 
 useEffect(() => {
   async function getNoteImageUsingAPI(pageInfo) {
-    NoteServer.setNprojInPuiController(pageInfo);
+    await NoteServer.setNprojInPuiController(pageInfo);
     await NoteServer.getNoteImage(pageInfo, setImageBlobUrl);
     const paperSize: PaperSize = await NoteServer.extractMarginInfo(url, pageInfo);
     setPaperSize(paperSize);
@@ -316,45 +320,45 @@ SetAutoPowerOnEnable, SetBeepSoundEnable, SetHoverEnable, SetOfflineDataEnable, 
 
 | Methods | Parameters |Description |
 | --- | --- |--- |
-| RequestVersionInfo | | 펜의 현재 버전을 요청 |
-| SetPassword | oldone: string, newone: string | 펜에 설정된 비밀번호를 변경 요청 |
-| InputPassword | password: string | 펜에 비밀번호를 전송 | 
-| RequestPenStatus | | 펜의 각종 설정 확인을 요청 |
-| SetRtcTime | | 펜에 설정된 시각을 현재 시각으로 변경 요청 |
-| SetAutoPowerOffTime | minute: number | 펜에 설정된 자동종료 시간을 변경 요청 ( 최대 3600 분 ) | 
-| SetPenCapPowerOnOffEnable | enable: boolean | 펜에 설정된 펜 뚜껑을 이용한 전원 ON/OFF 기능 변경 요청 |
-| SetAutoPowerOnEnable | enable: boolean | 펜에 설정된 펜 뚜껑 혹은 필기를 이용한 전원 ON 기능 변경 요청 |
-| SetBeepSoundEnable | enable: boolean | 펜에 설정된 비프음 기능 변경 요청 |
-| SetHoverEnable | enable: boolean | 펜에 설정된 호버 기능 변경 요청 <br/> ( 호버 : 필기 위치 가늠을 위한 시각적 Dot 표시 기능) |
-| SetOfflineDataEnable | enable: boolean | 펜에 설정된 오프라인 필기 데이터 저장 기능 변경 요청 |
-| SetColor | color: number | 펜에 설정된 LED 색상 변경 요청 ( argb ) |
-| RequestAvailableNotes | sections: number[ ], owners: number[ ], <br/> notes: number[ ] \| null| 펜에 실시간 필기 데이터에 대한 전송을 요청 <br/> ( notes 가 null 일 경우 노트 구분 없이 요청 ) |
-| RequestOfflineNoteList | section: number, owner: number | 펜에 저장된 오프라인 필기 데이터의 페이지 정보(book)를 요청 <br/> ( SO 가 0 일 경우 모든 note 리스트 반환 ) |
-| RequestOfflinePageList | section: number, owner: number, <br/> note: number | 펜에 저장된 오프라인 필기 데이터의 페이지 정보(page)를 요청  <br/> ( SOB 가 일치하는 한 노트의 page ) |
-| RequestOfflineData | section: number, owner: number, <br/>note: number,  deleteOnFinished: boolean,<br/> pages: number[ ] | 펜에 저장된 오프라인 필기 데이터를 요청 <br/> ( P 가 빈 배열일 경우 노트 내 모든 page 요청 ) <br/> ( deleteOnFinished 가 true일 경우 전송 완료된 데이터 삭제 )|
-| RequestOfflineDelete | section: number, owner: number, <br/> notes: number[ ] | 펜에 저장된 오프라인 필기 데이터에 대한 삭제를 요청 |
-| RequestFirmwareInstallation | file: file, version: string, <br/> isCompressed: boolean | 펜에 설치된 펌웨어를 업그레이드하기 위한 질의 |
-| RequestFirmwareUpload | offset: number, data: Uint8Array, <br/> status: number | 펜에 펌웨어 데이터를 업로드 | 
-| RequestProfileCreate | name: string, password: string | 펜에 프로파일 생성을 요청 |
-| ReqeustProfileDelete | name: string, password: string | 펜에 설정된 프로파일 제거 요청 |
-| RequestProfileInfo | name: string | 펜에 설정된 프로파일 정보 요청 |
-| RequestProfileWriteValue | name: string, passsword: string, <br/> data: { [key: string]: any } | 펜에 설정된 프로파일 내 데이터 작성 요청 |
-| RequestProfileReadValue | name: string, keys: string[ ] | 펜에 설정된 프로파일 내 데이터 정보 요청 |
-| RequestProfileDeleteValue | name: string, password: string, <br/> keys: string [ ] | 펜에 설정된 프로파일 내 데이터 제거 요청 |
+| RequestVersionInfo | | Request the current version of the pen |
+| SetPassword | oldone: string, newone: string | Request to change the password set on the pen |
+| InputPassword | password: string | Send a password to the pen | 
+| RequestPenStatus | | Request confirmation of various pen settings |
+| SetRtcTime | | Request to change the pen's set time to the current time |
+| SetAutoPowerOffTime | minute: number | Request to change the pen's set auto shutdown time (up to 3600 minutes) | 
+| SetPenCapPowerOnOffEnable | enable: boolean | Request to change the function of turning on/off the pen using the pen cap |
+| SetAutoPowerOnEnable | enable: boolean | Request to change the function of turning on the pen using the pen cap or writing |
+| SetBeepSoundEnable | enable: boolean | Request to change the beep sound function of the pen |
+| SetHoverEnable | enable: boolean | Request to change the hover function of the pen <br/> ( Hover: Visual dot display function for estimating writing position) |
+| SetOfflineDataEnable | enable: boolean | Request to change the function of storing offline writing data on the pen |
+| SetColor | color: number | Request to change the LED color of the pen (argb) |
+| RequestAvailableNotes | sections: number[ ], owners: number[ ], <br/> notes: number[ ] \| null| Request transmission of real-time writing data to the pen <br/> (If notes is null, request without distinguishing notes) |
+| RequestOfflineNoteList | section: number, owner: number | Request for page information (book) of offline writing data stored on the pen <br/> (If SO is 0, return all note lists) |
+| RequestOfflinePageList | section: number, owner: number, <br/> note: number | Request for page information (page) of offline writing data stored on the pen <br/> (As long as SOB matches, it's a page of the note) |
+| RequestOfflineData | section: number, owner: number, <br/>note: number,  deleteOnFinished: boolean,<br/> pages: number[ ] | Request for offline writing data stored on the pen <br/> (If P is an empty array, request all pages in the note) <br/> (If deleteOnFinished is true, delete the transmitted data when finished)|
+| RequestOfflineDelete | section: number, owner: number, <br/> notes: number[ ] | Request for deletion of offline writing data stored on the pen |
+| RequestFirmwareInstallation | file: file, version: string, <br/> isCompressed: boolean | Query to upgrade the installed firmware on the pen |
+| RequestFirmwareUpload | offset: number, data: Uint8Array, <br/> status: number | Upload firmware data to the pen | 
+| RequestProfileCreate | name: string, password: string | Request to create a profile on the pen |
+| ReqeustProfileDelete | name: string, password: string | Request to remove the configured profile on the pen |
+| RequestProfileInfo | name: string | Request for information about the configured profile on the pen |
+| RequestProfileWriteValue | name: string, passsword: string, <br/> data: { [key: string]: any } | Request to write data in the configured profile on the pen |
+| RequestProfileReadValue | name: string, keys: string[ ] | Request for information about the data in the configured profile on the pen |
+| RequestProfileDeleteValue | name: string, password: string, <br/> keys: string [ ] | Request to delete data in the configured profile on the pen |
 
-## 전체적인 Flow
+## Overall Flow
 ### Library Set
 ```ts
 import { PenHelper, NoteServer, PenMessageType } from 'web_pen_sdk';
 ```
 
-### Step1: PenHelper.scanPen()을 사용하여 pen 연결을 합니다.
+### Step1: Connect the pen using PenHelper.scanPen().
 ```ts
 /** Connect SmartPen to Web service */
 PenHelper.scanPen();
 ```
 
-### Step2: 펜에 발생되는 이벤트(연결, 배터리정보 등)를 처리합니다.
+### Step2: Handle events (connection, battery information, etc.) from the pen.
 ```ts
 useEffect(() => {
   PenHelper.messageCallback = async (mac, type, args) => {
@@ -370,7 +374,7 @@ const messageProcess = (mac, type, args) => {
 }
 ```
 
-### Step3: 펜으로부터 실시간 dot data를 받아옵니다.
+### Step3: Receive real-time dot data from the pen.
 ```ts
 /** Data Parsing from SmartPen */
 PenHelper.dotCallback = (mac, dot) => {
@@ -382,7 +386,7 @@ const strokeProcess = (dot: Dot) => {
 }
 ```
 
-### Step4: NoteServer.extractMarginInfo()를 사용하여 ncode paper의 size 정보를 받아옵니다.
+### Step4: Use NoteServer.extractMarginInfo() to get size information of the ncode paper.
 ```ts
 /** Use NoteServer.extractMarginInfo() function to get size information of the ncode paper. */
 const [paperSize, setPaperSize] = useState<PaperSize>();
@@ -390,7 +394,7 @@ const [paperSize, setPaperSize] = useState<PaperSize>();
 const paperSize: PaperSize = await NoteServer.extractMarginInfo(url, pageInfo);
 ```
 
-### Step5: NoteServer.getNoteImage()를 사용하여 note의 image url을 받아옵니다.
+### Step5: Use NoteServer.getNoteImage() to get image url of the note.
 ```ts
 /** Use NoteServer.getNoteImage() function to get image url of the note. */
 const [imageBlobUrl, setImageBlobUrl] = useState<string>();
@@ -398,7 +402,7 @@ const [imageBlobUrl, setImageBlobUrl] = useState<string>();
 await NoteServer.getNoteImage(pageInfo, setImageBlobUrl);
 ```
 
-### Step6: 스마트펜으로부터 받은 ncode dot 데이터를 view 사이즈에 맞게 변환하여 사용합니다.
+### Step6: Transform the received ncode dot data according to the view size and use it.
 ```ts
 /**
  * Draw on Canvas with SmartPen
@@ -417,7 +421,7 @@ const path = new Path(screenDot.x, screenDot.y);
 }
 ```
 
-### Step6: 스마트펜으로 터치될 페이지 내의 PUI 아이콘의 정보들을 세팅합니다.
+### Step6: Set the information of the PUI icons on the page that will be touched by the SmartPen.
 ```ts
 /**
  * Set the information for the PUI icon on the page
@@ -426,12 +430,10 @@ const path = new Path(screenDot.x, screenDot.y);
 (await) NoteServer.setNprojInPuiController(pageInfo)
 ```
 
-<br />
-
 ## 🐾 Sample Page
-> https://github.com/neostudio-team/WebSDKSample
+> [https://github.com/neostudio-team/WebSDKSample](https://github.com/neostudio-team/WebSDKSample)
 
-## 📑 web_pen_sdk 공식문서
+## 📑 web_pen_sdk Official Documentation
 > ### [Google Docs](https://docs.google.com/document/d/12ZSPQ-CVEOq4yxvNn2jcI9L_SZ01zJkMvbWBVfJCHWQ/edit?usp=sharing)
 
 ## 📜 License
@@ -444,85 +446,85 @@ Release Note
 **~2022. 05. 05.** (MHCHOI)
 -----
 ### Updates
-- web_pen_sdk 패키지 배포
-- Sample page 구성
+- Released web_pen_sdk package
+- Created a sample page
 
 **2022. 05. 06.** (MHCHOI)
 -----
 ### New Features
-- **Pen Event Handler** - 펜에서 발생되는 이벤트(연결, 해제, 패스워드 요구 등)를 처리하는 로직 추가
+- **Pen Event Handler** - Added logic to handle events from the pen (connection, disconnection, password request, etc.)
 ### Updates
-- Pen Event Handler 추가에 따른 readme 업데이트
-- Sample Page에 펜 연결해제 기능 추가, 배터리 정보 표시될 수 있도록 업데이트
-- 펜 충전시 배터리 상태정보는 128을 가진다. -> 추가 설명 업데이트
+- Updated readme to reflect the addition of Pen Event Handler
+- Added pen disconnection feature and updated the sample page to display battery information
+- Clarified that the battery status is 128 when the pen is charging
 
 **2022. 05. 09.** (WONHO)
 -----
 ### New Features
-- **SettingInfo, VersionInfo** type declaration
+- **PenConfigurationInfo, VersionInfo** - Added type declarations
 ### Updates
-- SettingInfo, VersionInfo type 정의에 따른 코드 수정
-- PenHelper 안에 정의된 any type 수정
+- Updated code according to the definition of PenConfigurationInfo, VersionInfo types
+- Updated any type within PenHelper
 
 **2022. 05. 13.** (WONHO, ver.0.5.2)
 -----
 ### New Features
-- **DotErrorInfo** type declaration
-- Dot Event 시 비정상 TimeStamp 시 Error 처리
+- **DotErrorInfo** - Added type declaration
+- Error handling for abnormal TimeStamps in Dot events
 ### Updates
-- 펜 비밀번호 설정, 변경, 해제 관련 messageType 추가 및 수정
-- 오프라인 및 실시간 데이터 관련 messageType 추가 및 수정
-- hover를 제외한 모든 Dot는 DotFilter 거치도록 수정
-- Packet Escape 로직 수정
+- Added and modified messageType related to pen password setting, change, and release
+- Added and modified messageType related to offline and real-time data
+- All Dots except hover go through DotFilter
+- Modified Packet Escape logic
 
 **2022. 05. 16.** (WONHO, ver.0.5.3)
 -----
 ### Updates
-- SupportedProtocolVersion 수정
+- Modified SupportedProtocolVersion
 
 **2022. 05. 17.** (WONHO, ver.0.5.4)
 -----
 ### New Features
-- **PEN_CONNECTION_SUCCESS** MessageType declaration
-- **ONLINE_PEN_HOVER_EVENT** - v2.18 용 펜 hover 이벤트 로직 추가
+- **PEN_CONNECTION_SUCCESS** - Added MessageType declaration
+- **ONLINE_PEN_HOVER_EVENT** - Added logic for pen hover events for v2.18
 ### Updates
-- SupportedProtocolVersion 수정
+- Modified SupportedProtocolVersion
 
 **2022. 05. 18.** (WONHO, ver.0.5.5)
 -----
 ### Updates
-- SDK 내에서 자동으로 setHover 안하도록 수정
+- Modified the SDK to not automatically setHover
 
 **2022. 05. 31.** (WONHO, ver.0.5.6)
 -----
 ### New Features
-- **Profile Feature** - 펜 프로파일의 생성, 삭제, 조회 및 프로파일 항목의 생성, 삭제, 조회 로직 추가
-- **Firmware Feature** - 펌웨어 업데이트 로직 추가
-- **PenDisk Init** - 펜 디스크 초기화 요청 추가
+- **Profile Feature** - Added logic for creating, deleting, and querying pen profiles and creating, deleting, and querying items in profiles
+- **Firmware Feature** - Added logic for firmware update
+- **PenDisk Init** - Added request for initializing the pen disk
 ### Updates
-- 과밀한 통신 상태에서 블루투스 쓰기 진행 시 중첩연결에 따른 에러 방지 위한 코드 추가
+- Added code to prevent errors due to overlapping connections during Bluetooth write in a busy communication state
 
 **2022. 06. 27.** (WONHO, ver.0.5.7)
 -----
 ### New Features
-- **PUI Feature** - 펜으로 스마트클래스킷 (부기보드) PUI 클릭 시, 메시지 출력 로직 추가
+- **PUI Feature** - Added logic to display a message when clicking on a Smart Class Kit (Boogie Board) PUI with the pen
 
 **2022. 07. 04.** (WONHO, ver.0.6.6)
 -----
 ### New Features
-- **PUI Feature** - PUI 좌표 하드코딩으로 수정
+- **PUI Feature** - Hardcoded PUI coordinates
 
 **2022. 07. 05.** (WONHO, ver.0.6.7)
 -----
 ### New Features
-- **PUI Feature** - PUI 좌표 nproj를 json으로 컨버팅해서 사용하도록 수정
+- **PUI Feature** - Converted PUI coordinates from nproj to json for use
 
 **2023. 12. 01.** (WONHO, ver.0.6.8)
 -----
 ### New Features
-- **PUI Feature** - PUI nproj 로 롤백, 노트 페이지 의 PUI도 지원하도록 추가
+- **PUI Feature** - Rolled back to PUI nproj, added support for PUI on note pages
 
 **2024. 01. 06.** (WONHO, ver.0.7.2)
 -----
 ### New Features
-- **PUI Feature** - setNprojInPuiController, extractMarginInfo 매개변수로 url 추가
+- **PUI Feature** - Added url as a parameter to setNprojInPuiController and extractMarginInfo

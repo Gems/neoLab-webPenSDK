@@ -1,4 +1,5 @@
-import Dot, { DotTypes } from "../API/Dot";
+import PageDot from "../API/PageDot";
+import {Dot, DotTypes} from "./type";
 
 interface FilterProtocol {
   (dot: Dot): void;
@@ -15,10 +16,10 @@ export default class DotFilter {
 
   delta: number = 10;
 
-  dot1 = new Dot();
-  dot2 = new Dot();
-  makeDownDot = new Dot();
-  makeMoveDot = new Dot();
+  dot1 = new PageDot() as Dot;
+  dot2 = new PageDot() as Dot;
+  makeDownDot = new PageDot() as Dot;
+  makeMoveDot = new PageDot() as Dot;
   secondCheck = true;
   thirdCheck = true;
 
@@ -127,8 +128,8 @@ export default class DotFilter {
       }
 
       // Dot and variable initialization
-      this.dot1 = new Dot();
-      this.dot2 = new Dot();
+      this.dot1 = new PageDot();
+      this.dot2 = new PageDot();
       this.secondCheck = true;
       this.thirdCheck = true;
     }
@@ -221,8 +222,6 @@ export default class DotFilter {
   };
 
   sendDot = (dot: Dot) => {
-    if (this.listener) {
-      this.listener(dot);
-    }
+    this.listener!(dot);
   };
 }

@@ -1,50 +1,47 @@
+// noinspection JSUnusedGlobalSymbols
+
 import PenClientParserV2 from "./PenClientParserV2";
 import * as Error from "../Model/SDKError";
-import PenMessageType from "../API/PenMessageType";
 import PenRequestV2 from "./PenRequestV2";
-import Dot from "../API/Dot";
-import { DotErrorInfo, VersionInfo } from "../Util/type";
+import { PenCallbacks, VersionInfo, DotErrorInfo } from "../Util/type";
 
-type OnDot = (pencontroller: PenController, dot: Dot) => void;
-type OnMessage = (pencontroller: PenController, msgType: number, args: any) => void;
 type HandleWrite = (u8: Uint8Array) => void;
+
 
 export default class PenController {
   mParserV2: PenClientParserV2;
   mClientV2: PenRequestV2;
   mClientV1: any;
-  onDot: OnDot | null;
-  onMessage: OnMessage | null;
-  handleWrite: HandleWrite | null;
-  Protocol: number;
+  protocol: number;
   info: VersionInfo;
+  hoverMode: boolean;
   device: any;
+  handleWrite: HandleWrite | null;
 
-  constructor() {
+  callbacks: PenCallbacks | null;
+
+  constructor(device: BluetoothDevice) {
     this.mParserV2 = new PenClientParserV2(this);
     this.mClientV2 = new PenRequestV2(this);
-    this.onDot = null;
-    this.onMessage = null;
-    this.Protocol = 2;
-    this.handleWrite = null;
+    this.protocol = 2;
     this.info = {} as VersionInfo;
+    this.hoverMode = false;
+    this.device = device;
+
+    this.handleWrite = null;
+    this.callbacks = null;
   }
 
   /**
-   *
-   *
-   * @param {callback} handledot
-   * @param {callback} handlemessage
    * @memberof PenController
    */
-  addCallback(handledot: OnDot, handlemessage: OnMessage) {
-    this.onDot = handledot;
-    this.onMessage = handlemessage;
+  addCallbacks(callbacks: PenCallbacks) {
+    this.callbacks = callbacks;
   }
 
   // MARK: Step2 Add Write Pipe
-  addWrite(handlewrite: HandleWrite) {
-    this.handleWrite = handlewrite;
+  addWrite(writeHandler: HandleWrite) {
+    this.handleWrite = writeHandler;
   }
 
   /**
@@ -52,7 +49,7 @@ export default class PenController {
    * @param {array} buff - uint8array
    */
   putData(buff: Uint8Array) {
-    if (this.Protocol === 1) {
+    if (this.protocol === 1) {
       // this.mClientV1.ProtocolParse(buff, buff.Length);
     } else {
       this.mParserV2.ProtocolParse(buff);
@@ -63,15 +60,15 @@ export default class PenController {
   /**
    * 도트 에러 발생 시 메시지 출력을 위한 함수
    * - 해당 함수가 기능하기 위해서는 onMessage를 구현해야 한다.
-   * @param {any} args
+   * @param {DotErrorInfo} errorInfo
    */
-  onErrorDetected(args: DotErrorInfo) {
-    this.onMessage!(this, PenMessageType.EVENT_DOT_ERROR, args);
+  onErrorDetected(errorInfo: DotErrorInfo) {
+    this.callbacks?.onDotError!(errorInfo);
   }
 
   //SDK Local logic
   // step1
-  localprocessSetRTCTime() {
+  localProcessSetRTCTime() {
     this.SetRtcTime();
   }
 
@@ -87,60 +84,64 @@ export default class PenController {
    * @returns
    */
   Request(requestV1: any, requestV2: any) {
-    // if ( PenClient === null || !PenClient.Alive || Protocol === -1 ) {
-    if (this.Protocol === -1) {
+    // if ( PenClient === null || !PenClient.Alive || protocol === -1 ) {
+    if (this.protocol === -1)
       throw new Error.SDKError("RequestIsUnreached");
+
+    if (this.protocol === 1) {
+      if (!requestV1)
+        throw new Error.SDKError("UnavailableRequest");
+
+      return requestV1();
     }
 
-    if (this.Protocol === 1) {
-      if (!requestV1) throw new Error.SDKError("UnaavailableRequest");
-      return requestV1();
-    } else {
-      if (!requestV2) throw new Error.SDKError("UnaavailableRequest");
-      return requestV2();
-    }
+    if (!requestV2)
+      throw new Error.SDKError("UnavailableRequest");
+
+    return requestV2();
   }
 
   // MARK: Request
   //Request Version Info
-  /**
-   * 현재 버전을 요청하는 함수
-   * @returns
-   */
-  RequestVersionInfo() {
-    return this.mParserV2.penVersionInfo;
-  }
+  // /**
+  //  * 현재 버전을 요청하는 함수
+  //  * @returns
+  //  */
+  // RequestVersionInfo() {
+  //   return this.mParserV2.penVersionInfo;
+  // }
 
   // Request
   /**
    * 펜에 설정된 비밀번호를 변경 요청하는 함수
-   * @param {string} oldone
-   * @param {string} [newone=""]
+   * @param {string} oldPassword
+   * @param {string} [newPassword=""]
    * @memberof PenController
    */
-  SetPassword(oldone: string, newone = "") {
-    if (newone === this.mClientV2.defaultConfig.DEFAULT_PASSWORD) {
-      this.onMessage!(this, PenMessageType.PEN_ILLEGAL_PASSWORD_0000, null);
+  SetPassword(oldPassword: string, newPassword: string = "") {
+    if (newPassword === this.mClientV2.defaultConfig.DEFAULT_PASSWORD) {
+      this.callbacks?.onAuthenticationIllegalPassword!();
       return;
-    } else {
-      this.mParserV2.state.newPassword = newone;
     }
+
+    this.mParserV2.AuthorizationPassword(newPassword);
+
     this.Request(
       () => {},
       () => {
-        this.mClientV2.ReqSetUpPassword(oldone, newone);
+        this.mClientV2.ReqSetUpPassword(oldPassword, newPassword);
       }
     );
   }
 
   /**
-   * 펜에 비밀번호를 전송하는 함수
+   * Function to transmit the password to the pen.
    * @param {string} password
    */
-  InputPassword(password: string) {
-    this.Request(
-      () => this.mClientV1.ReqInputPassword(password),
-      () => this.mClientV2.ReqInputPassword(password)
+  AuthorizeWithPassword(password: string): boolean {
+    return this.Request(
+      () => this.mClientV1.AuthorizeWithPassword(password),
+      () => this.mClientV2.AuthorizeWithPassword(password)
     );
   }
 
@@ -258,12 +259,13 @@ export default class PenController {
   }
 
   /**
-   * 펜의 실시간 필기 데이터에 대한 전송을 요청하는 함수
-   * @param {array} sections
-   * @param {array} owners
-   * @param {(array | null)}notes - null일 경우 노트를 구분하지 않는다.
+   * Function to request the transmission of real-time writing data from the pen.
+   * Ed: Probably this function does not request real-time data, but the data stored on the pen.
+   * @param {Array} sections
+   * @param {Array} owners
+   * @param {Array} notes - If null, notes are not differentiated.
    */
-  RequestAvailableNotes(sections: number[], owners: number[], notes: number[] | null) {
+  RequestAvailableNotes(sections?: number[], owners?: number[], notes?: number[]) {
     this.Request(
       () => this.mClientV1.ReqAddUsingNotes(sections, owners, notes),
       () => this.mClientV2.ReqAddUsingNotes(sections, owners, notes)
@@ -271,7 +273,7 @@ export default class PenController {
   }
 
   // Offline List
-  // setion or owner  = null : All Note
+  // section or owner  = null : All Note
   /**
    * 펜에 저장된 오프라인 필기 데이터의 종이 정보(note)를 요청하는 함수
    * - section, owner 모두 0일 경우 저장된 모든 note ID 리스트 (최대 64개)를 요청한다.
@@ -280,7 +282,7 @@ export default class PenController {
    */
   RequestOfflineNoteList(section: number, owner: number) {
     this.Request(
-      () => this.mClientV1.ReqOfflineDataList(),
+      () => this.mClientV1.ReqOfflineDataList(section, owner),
       () => this.mClientV2.ReqOfflineNoteList(section, owner)
     );
   }
@@ -294,7 +296,7 @@ export default class PenController {
    */
   RequestOfflinePageList(section: number, owner: number, note: number) {
     this.Request(
-      () => this.mClientV1.ReqOfflineDataList(),
+      () => this.mClientV1.ReqOfflineDataList(section, owner, note),
       () => this.mClientV2.ReqOfflinePageList(section, owner, note)
     );
   }
@@ -311,11 +313,8 @@ export default class PenController {
    */
   RequestOfflineData(section: number, owner: number, note: number, deleteOnFinished: boolean = true, pages: any = []) {
     return this.Request(
-      () => this.mClientV1.ReqOfflineData(),
-      () => {
-        return this.mClientV2.ReqOfflineData(section, owner, note, deleteOnFinished, pages);
-      }
-    );
+      () => this.mClientV1.ReqOfflineData(section, owner, note, deleteOnFinished, pages),
+      () => this.mClientV2.ReqOfflineData(section, owner, note, deleteOnFinished, pages));
   }
 
   /**
@@ -327,10 +326,8 @@ export default class PenController {
    */
   RequestOfflineDelete(section: number, owner: number, notes: number[]) {
     this.Request(
-      () => this.mClientV1.ReqOfflineDelete(),
-      () => {
-        this.mClientV2.ReqOfflineDelete(section, owner, notes);
-      }
+      () => this.mClientV1.ReqOfflineDelete(section, owner, notes),
+      () => this.mClientV2.ReqOfflineDelete(section, owner, notes)
     );
   }
 
@@ -343,10 +340,8 @@ export default class PenController {
    */
   RequestFirmwareInstallation(file: File, version: string, isCompressed: boolean) {
     this.Request(
-      () => this.mClientV1.ReqPenSwUpgrade(file),
-      () => {
-        this.mClientV2.ReqPenSwUpgrade(file, version, isCompressed);
-      }
+      () => this.mClientV1.ReqPenSwUpgrade(file, version, isCompressed),
+      () => this.mClientV2.ReqPenSwUpgrade(file, version, isCompressed)
     );
   }
 
@@ -358,7 +353,7 @@ export default class PenController {
    */
   RequestFirmwareUpload(offset: number, data: Uint8Array, status: number) {
     this.Request(
-      () => this.mClientV1.ReqPenSwUpload(),
+      () => this.mClientV1.ReqPenSwUpload(offset, data, status),
       () => this.mClientV2.ReqPenSwUpload(offset, data, status)
     );
   }
@@ -366,98 +361,88 @@ export default class PenController {
   /**
    * 펜에 프로파일 생성을 요청하는 함수
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
-   * @param {string} name
-   * @param {string} password
    */
-  RequestProfileCreate = (name: string, password: string) => {
+  RequestProfileCreate(/*name: string, password: string*/) {
     this.Request(
-      () => this.mClientV1.ReqProfileCreate(name, password),
-      () => this.mClientV2.ReqProfileCreate(name, password)
+      () => this.mClientV1.ReqProfileCreate(),
+      () => this.mClientV2.ReqProfileCreate()
     );
   };
 
   /**
    * 펜에 설정된 프로파일 제거를 요청하는 함수
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
-   * @param {string} name
-   * @param {string} password
    */
-  RequestProfileDelete = (name: string, password: string) => {
+  RequestProfileDelete(/*name: string, password: string*/) {
     this.Request(
-      () => this.mClientV1.ReqProfileDelete(name, password),
-      () => this.mClientV2.ReqProfileDelete(name, password)
+      () => this.mClientV1.ReqProfileDelete(),
+      () => this.mClientV2.ReqProfileDelete()
     );
   };
 
   /**
    * 펜에 설정된 프로파일 정보를 요청하는 함수
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
-   * @param {string} name
    */
-  RequestProfileInfo = (name: string) => {
+  RequestProfileInfo(/*name: string*/) {
     this.Request(
-      () => this.mClientV1.ReqProfileInfo(name),
-      () => this.mClientV2.ReqProfileInfo(name)
+      () => this.mClientV1.ReqProfileInfo(),
+      () => this.mClientV2.ReqProfileInfo()
     );
   };
 
   /**
    * 펜에 설정된 프로파일 내 데이터 작성을 요청하는 함수
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
-   * @param {string} name
-   * @param {string} password
-   * @param {Array} keys
    * @param {Array} data
    */
-  RequestProfileWriteValue = (name: string, password: string, data: { [key: string]: any }) => {
+  RequestProfileWriteValue(/*name: string, password: string,*/ data: { [key: string]: any }) {
     // this.ReqProfileWriteValue("test","test",{
     //   "test": 123
     // })
 
     this.Request(
-      () => this.mClientV1.ReqProfileWriteValue(name, password, data),
-      () => this.mClientV2.ReqProfileWriteValue(name, password, data)
+      () => this.mClientV1.ReqProfileWriteValue(data),
+      () => this.mClientV2.ReqProfileWriteValue(data)
     );
   };
 
   /**
    * 펜에 설정된 프로파일 내 데이터 정보를 요청하는 함수
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
-   * @param {string} name
    * @param {Array} keys
    */
-  RequestProfileReadValue = (name: string, keys: string[]) => {
+  RequestProfileReadValue(/*name: string,*/ keys: string[]) {
     this.Request(
-      () => this.mClientV1.ReqProfileReadValue(name, keys),
-      () => this.mClientV2.ReqProfileReadValue(name, keys)
+      () => this.mClientV1.ReqProfileReadValue(keys),
+      () => this.mClientV2.ReqProfileReadValue(keys)
     );
   };
 
   /**
    * 펜에 설정된 프로파일 내 데이터 제거를 요청하는 함수
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
-   * @param {string} name
-   * @param {string} password
    * @param {Array} keys
    */
-  RequestProfileDeleteValue = (name: string, password: string, keys: string[]) => {
+  RequestProfileDeleteValue = (/*name: string, password: string,*/ keys: string[]) => {
     this.Request(
-      () => this.mClientV1.ReqProfileDeleteValue(name, password, keys),
-      () => this.mClientV2.ReqProfileDeleteValue(name, password, keys)
+      () => this.mClientV1.ReqProfileDeleteValue(keys),
+      () => this.mClientV2.ReqProfileDeleteValue(keys)
     );
   };
 
   OnConnected() {
-    if (this.Protocol !== 1) {
-      this.mParserV2.state.first = true;
+    if (this.protocol !== 1)
+      //this.mParserV2.state.first = true;
       this.mClientV2.ReqVersionTask();
-    }
   }
 
   OnDisconnected() {
-    if (this.Protocol === 1) this.mClientV1.OnDisconnected();
-    else this.mClientV2.OnDisconnected();
+    this.protocol === 1
+        ? this.mClientV1.OnDisconnected()
+        : this.mClientV2.OnDisconnected();
+
     this.mParserV2.OnDisconnected();
-    this.onMessage!(this, PenMessageType.PEN_DISCONNECTED, null);
+    this.callbacks?.onPenDisconnected!();
   }
 }

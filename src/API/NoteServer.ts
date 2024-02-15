@@ -1,8 +1,8 @@
-import { PageInfo } from "../Util/type";
-import { initializeApp } from "firebase/app";
+import {PageInfo} from "../Util/type";
+import {initializeApp} from "firebase/app";
 import * as NLog from "../Util/NLog";
 
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import {getDownloadURL, listAll, getStorage, ref} from "firebase/storage";
 import JSZip from "jszip";
 import PUIController from "./PUIController";
 
@@ -16,6 +16,13 @@ const firebaseConfig = {
   appId: "1:693506452621:web:8b6600b884b8822d",
   measurementId: "G-44CKW86QHE",
 };
+
+const fbApp = initializeApp(firebaseConfig);
+const storage = getStorage(fbApp);
+
+listAll(ref(storage, '/')).then((res) => {
+  NLog.log(res);
+});
 
 // Ncode Formula
 const NCODE_SIZE_IN_INCH = (8 * 7) / 600;
@@ -34,18 +41,17 @@ const setNprojInPuiController = async (url: string | null, pageInfo: PageInfo) =
   if (!nprojUrl) {
     try {
       const sobStr = `${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.nproj`;
-    
-      const fbApp = initializeApp(firebaseConfig);
-      const storage = getStorage(fbApp);
-    
+
       nprojUrl = await getDownloadURL(ref(storage, `nproj/${sobStr}`));
     } catch (err) {
       NLog.log(err);
       throw err;
     }
   }
+
   NLog.log("[NoteServer] In the PUIController, set nporj at the following url => " + nprojUrl);
-  PUIController.getInstance().fetchOnlyPageSymbols(nprojUrl, pageInfo);
+
+  await PUIController.getInstance().fetchOnlyPageSymbols(nprojUrl, pageInfo);
 };
 
 /**
@@ -59,9 +65,6 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
   let nprojUrl = url;
   if (!nprojUrl) {
     try {
-      const fbApp = initializeApp(firebaseConfig);
-      const storage = getStorage(fbApp);
-    
       nprojUrl = await getDownloadURL(ref(storage, `nproj/${sobStr}`));
     } catch (err) {
       NLog.log(err);
@@ -82,16 +85,15 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
 
     let startPage = doc.children[0].getElementsByTagName("start_page")[0]?.innerHTML;
     const segment_info = doc.children[0].getElementsByTagName("segment_info")
+
     if (segment_info) {
-      const start_page_new = segment_info[0].getAttribute("ncode_start_page");
-      startPage = start_page_new;
+      startPage = segment_info[0].getAttribute("ncode_start_page");
     }
 
     const page_item = doc.children[0].getElementsByTagName("page_item")[page - parseInt(startPage)];
 
-    if (page_item === undefined) {
+    if (page_item === undefined)
       throw new Error("Page item is undefined");
-    }
 
     NLog.log(`Target SOBP: ${section}(section) ${owner}(owner) ${book}(book) ${page}(page)`);
 
@@ -116,7 +118,7 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
 
     return { Xmin, Xmax, Ymin, Ymax };
   } catch (err) {
-    NLog.log(err);
+    NLog.error(err);
     throw err;
   }
 };
@@ -129,25 +131,21 @@ const getNoteImage = async (pageInfo: PageInfo, setImageBlobUrl: any) => {
   const sobStr = `/${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.zip`;
   const page = pageInfo.page;
 
-  const fbApp = initializeApp(firebaseConfig);
-  const storage = getStorage(fbApp);
-
   const jszip = new JSZip();
+
   await getDownloadURL(ref(storage, `png/${sobStr}`)).then(async (url) => {
     const zipBlob = await fetch(url).then((res) => res.blob());
+
     await jszip.loadAsync(zipBlob).then(async function (zip) {
-      const zipValues: any = await Object.values(zip.files);
+      const zipValues: any = Object.values(zip.files);
       const target = zipValues.filter((x: any) => {
         let found = x.name.match(/(\d+)_(\d+)_(\d+)_(\d+)\.jpg/);
         let pageNum = found[4] * 1;
-        if (pageNum === page) {
-          return true;
-        } else {
-          return false;
-        }
+
+        return pageNum === page;
       });
 
-      await target[0].async("blob").then(async function (imageBlob: any) {
+      await target[0].async("blob").then(async (imageBlob: any) => {
         const imageBlobUrl = await URL.createObjectURL(imageBlob);
         setImageBlobUrl(imageBlobUrl);
       });

@@ -1,5 +1,7 @@
 import * as Converter from "../Util/Converter";
 import * as NLog from "../Util/NLog";
+import ByteUtil from "../Util/ByteUtil";
+import CONST from "./Const";
 
 class Packet {
   Cmd: number;
@@ -54,20 +56,16 @@ class Packet {
 
   /**
    * 패킷에서 원하는 바이트 크기만큼의 값을 반환하고, 바이트 위치값을 수정하는 함수
-   * @param {(number | null)} arg
+   * @param {(number | null)} size
    * @returns
    */
-  GetBytes(arg: number | null) {
-    let size = 0;
-    if (arg) {
-      size = arg;
-    } else {
-      size = this.Data.length - this.mIndex;
-    }
-    let result = this.Data.slice(this.mIndex, this.mIndex + size);
-    if (result.length === 0) {
+  GetBytes(size?: number) {
+    size = size ?? this.Data.length - this.mIndex;
+    const result = this.Data.slice(this.mIndex, this.mIndex + size);
+
+    if (result.length === 0)
       NLog.log("zero data");
-    }
+
     this.Move(size);
     return result;
   }
@@ -141,5 +139,36 @@ class PacketBuilder {
     return this.mPacket;
   }
 }
+
+class RequestPacketBuilder extends ByteUtil {
+  cmd: number[];
+
+  constructor(cmd: number) {
+    super();
+
+    this.cmd = [];
+    this.cmd.push(cmd);
+  }
+
+  PutCode(code: number): RequestPacketBuilder {
+    this.cmd.push(code);
+    return this;
+  }
+
+  build(): Uint8Array {
+    const dataArray = this.ToU8Array();
+    const packetSize = dataArray.length; // REVIEW: Find proper offset value.
+
+    return new ByteUtil()
+        .Put(CONST.PK_STX, false)
+        .PutArray(new Uint8Array(this.cmd))
+        .PutShort(packetSize)
+        .PutArray(dataArray)
+        .Put(CONST.PK_ETX, false)
+        .ToU8Array();
+  }
+}
+
+
 export default Packet;
-export { Packet, PacketBuilder };
+export { Packet, PacketBuilder, RequestPacketBuilder };

@@ -1,8 +1,8 @@
-import PenController from './PenCotroller/PenController'
-import PenHelper from './PenCotroller/PenHelper'
-import Dot from './API/Dot'
+import PenController from './PenController/PenController'
+import PenHelper from './PenController/PenHelper'
+import PageDot from './API/PageDot'
 import NoteServer from './API/NoteServer'
-import PenMessageType, {SettingType} from './API/PenMessageType'
+import {SettingType} from './API/PenMessageType'
 
 // export default PenController
-export {PenController, Dot, NoteServer, PenHelper, PenMessageType, SettingType,}
+export {PenController, PageDot, NoteServer, PenHelper, SettingType,}
