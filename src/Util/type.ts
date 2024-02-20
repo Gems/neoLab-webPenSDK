@@ -74,10 +74,6 @@ export type View = {
   height: number;
 };
 
-export type Options = {
-  filters: any;
-};
-
 export type Paper = {
   section: number;
   owner: number;
@@ -99,7 +95,6 @@ export type VersionInfo = {
 };
 
 export type PenConfigurationInfo = {
-  MacAddress: string;
   Locked: boolean;
   ResetCount: number;
   RetryCount: number;
@@ -167,7 +162,7 @@ export type OnPage = (page: PageInfo) => void;
 
 export type OnPenProfileData = (profileData: any) => void; // TODO: Clarify data type
 
-export type OnPenSettingChangeSuccess = (settingType: number) => void;
+export type OnPenSettingChangeSuccess = (settingType: number, settingValue: any) => void;
 export type OnPenSettingChangeFailure = (settingType: number) => void;
 
 export type OnPowerOffEvent = (shutdownReason: number) => void;

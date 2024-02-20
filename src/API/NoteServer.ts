@@ -2,7 +2,7 @@ import {PageInfo} from "../Util/type";
 import {initializeApp} from "firebase/app";
 import * as NLog from "../Util/NLog";
 
-import {getDownloadURL, listAll, getStorage, ref} from "firebase/storage";
+import {getDownloadURL, getStorage, ref} from "firebase/storage";
 import JSZip from "jszip";
 import PUIController from "./PUIController";
 
@@ -20,10 +20,6 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const storage = getStorage(fbApp);
 
-listAll(ref(storage, '/')).then((res) => {
-  NLog.log(res);
-});
-
 // Ncode Formula
 const NCODE_SIZE_IN_INCH = (8 * 7) / 600;
 const POINT_72DPI_SIZE_IN_INCH = 1 / 72;
@@ -33,21 +29,25 @@ const point72ToNcode = (p: number) => {
   return p / ratio;
 };
 
+const getNprojUrl = async (pageInfo: PageInfo) => {
+  try {
+    const pageUrl = `nproj/${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.nproj`;
+    console.log("Downloading URL for: " + pageUrl);
+    const nprojUrl = await getDownloadURL(ref(storage, pageUrl));
+    console.log("NProj URL: " + nprojUrl);
+
+    return nprojUrl;
+  } catch (err) {
+    NLog.log(err);
+    throw err;
+  }
+}
+
 /**
  * Set Note Page PUI in PUIController
  */
 const setNprojInPuiController = async (url: string | null, pageInfo: PageInfo) => {
-  let nprojUrl = url;
-  if (!nprojUrl) {
-    try {
-      const sobStr = `${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.nproj`;
-
-      nprojUrl = await getDownloadURL(ref(storage, `nproj/${sobStr}`));
-    } catch (err) {
-      NLog.log(err);
-      throw err;
-    }
-  }
+  const nprojUrl = url ?? await getNprojUrl(pageInfo);
 
   NLog.log("[NoteServer] In the PUIController, set nporj at the following url => " + nprojUrl);
 
@@ -59,18 +59,9 @@ const setNprojInPuiController = async (url: string | null, pageInfo: PageInfo) =
  * -> define X(min/max), Y(min,max)
  */
 const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
-  const sobStr = `${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.nproj`;
   const page = pageInfo.page;
-  
-  let nprojUrl = url;
-  if (!nprojUrl) {
-    try {
-      nprojUrl = await getDownloadURL(ref(storage, `nproj/${sobStr}`));
-    } catch (err) {
-      NLog.log(err);
-      throw err;
-    }
-  }
+  const nprojUrl = url ?? await getNprojUrl(pageInfo);
+
   NLog.log("[NoteServer] Get the page margin from the following url => " + nprojUrl);
 
   try {
@@ -86,9 +77,8 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
     let startPage = doc.children[0].getElementsByTagName("start_page")[0]?.innerHTML;
     const segment_info = doc.children[0].getElementsByTagName("segment_info")
 
-    if (segment_info) {
+    if (segment_info)
       startPage = segment_info[0].getAttribute("ncode_start_page");
-    }
 
     const page_item = doc.children[0].getElementsByTagName("page_item")[page - parseInt(startPage)];
 
@@ -127,30 +117,39 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
 /**
  * GET note image function
  */
-const getNoteImage = async (pageInfo: PageInfo, setImageBlobUrl: any) => {
-  const sobStr = `/${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.zip`;
+const getNoteImage = async (pageInfo: PageInfo): Promise<string> => {
+  const zipUrl = `png//${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.zip`;
   const page = pageInfo.page;
 
   const jszip = new JSZip();
 
-  await getDownloadURL(ref(storage, `png/${sobStr}`)).then(async (url) => {
-    const zipBlob = await fetch(url).then((res) => res.blob());
+  console.log("Downloading URL for: " + zipUrl);
 
-    await jszip.loadAsync(zipBlob).then(async function (zip) {
-      const zipValues: any = Object.values(zip.files);
-      const target = zipValues.filter((x: any) => {
-        let found = x.name.match(/(\d+)_(\d+)_(\d+)_(\d+)\.jpg/);
-        let pageNum = found[4] * 1;
+  return await getDownloadURL(ref(storage, zipUrl))
+      .then(async (url) => {
+        console.log("Zip URL: " + url);
+        const zipBlob = await fetch(url).then((res) => res.blob());
 
-        return pageNum === page;
+        return await jszip
+            .loadAsync(zipBlob)
+            .then(async function (zip) {
+              const pages = Object.values(zip.files)
+                  .reduce((o: any, file) => {
+                    const found = file.name.match(/(\d+)_(\d+)_(\d+)_(\d+)\.jpg/);
+                    const pageNum = found[4];
+
+                    o[pageNum] = file;
+
+                    return o;
+                  }, {});
+
+              const pageFile = pages[page] ?? Object.values(pages)[0];
+
+              !pages[page] && console.warn(`Page '${page}' not found, using first page instead`);
+
+              return await pageFile.async("blob").then(URL.createObjectURL);
+            });
       });
-
-      await target[0].async("blob").then(async (imageBlob: any) => {
-        const imageBlobUrl = await URL.createObjectURL(imageBlob);
-        setImageBlobUrl(imageBlobUrl);
-      });
-    });
-  });
 };
 
 const api = {

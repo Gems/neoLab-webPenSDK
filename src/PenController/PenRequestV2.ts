@@ -45,6 +45,7 @@ export default class PenRequestV2 {
   penController: PenController;
   defaultConfig: DefaultConfig;
   state: any;
+  settingChanges: any = {};
 
   constructor(penController: PenController) {
     this.penController = penController;
@@ -160,6 +161,7 @@ export default class PenRequestV2 {
    */
   RequestChangeSetting(settingType: number, value: any) {
     const packet = new RequestPacketBuilder(CMD.SETTING_CHANGE_REQUEST);
+    this.settingChanges[settingType] = value;
 
     switch (settingType) {
       case SettingType.TimeStamp:
@@ -762,6 +764,9 @@ export default class PenRequestV2 {
    * @returns {boolean}
    */
   private Send(packet: RequestPacketBuilder): boolean {
+    if (!this.penController.handleWrite)
+      console.warn("No Writing Handle initialized yet");
+
     this.penController.handleWrite!(packet.build());
     return true;
   }

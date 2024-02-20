@@ -97,11 +97,10 @@ export default class PenClientParserV2 {
         const versionInfo = Res.versionInfo(packet);
         this.penController.info = versionInfo;
         this.isUploading = false;
-        this.state.eventCount = 0;
 
         NLog.log("ParsePacket Version Info", versionInfo);
 
-        this.penController.callbacks?.onPenConnected!(versionInfo);
+        this.penController.callbacks?.onPenConnected?.(versionInfo);
         this.ReqPenStatus();
         break;
 
@@ -109,13 +108,13 @@ export default class PenClientParserV2 {
         const shutdownReason = packet.GetByte();
         NLog.log("ParsePacket power off", shutdownReason);
 
-        this.penController.callbacks?.onPowerOffEvent!(shutdownReason);
+        this.penController.callbacks?.onPowerOffEvent?.(shutdownReason);
         break;
 
       case CMD.LOW_BATTERY_EVENT:
         const battery = packet.GetByte();
 
-        this.penController.callbacks?.onBatteryLowEvent!(battery);
+        this.penController.callbacks?.onBatteryLowEvent?.(battery);
         break;
 
       // MARK: CMD Up & Down New
@@ -156,23 +155,17 @@ export default class PenClientParserV2 {
         const configurationInfo = Res.penConfigurationInfo(packet);
         NLog.log("ParsePacket SETTING_INFO_RESPONSE", configurationInfo, "first Connection?", !this.state);
 
-        configurationInfo.MacAddress = this.penController.info.MacAddress;
-
-        this.penController.hoverMode = configurationInfo.HoverMode;
-        this.penController.callbacks?.onConfigurationInfo!(configurationInfo);
-
-        // First Connection
+        // First Connection // REVIEW: Remove this and initialize the state in the constructor. It seems there is no "first conenction check"
         if (!this.state)
           this.initPenState(configurationInfo);
+
+        this.penController.handleConfigurationInfo(configurationInfo);
 
         break;
 
       case CMD.SETTING_CHANGE_RESPONSE:
         const settingChange = Res.SettingChange(packet);
-
-        !!settingChange.result
-            ? this.penController.callbacks?.onPenSettingChangeSuccess!(settingChange.settingType)
-            : this.penController.callbacks?.onPenSettingChangeFailure!(settingChange.settingType);
+        this.penController.handleSettingChange(settingChange);
 
         break;
 
@@ -185,15 +178,15 @@ export default class PenClientParserV2 {
           this.state.authenticationRequired = false;
 
           authenticationResult.status === 1
-              ? this.penController.callbacks?.onAuthenticationSuccess!(false)
-              : this.penController.callbacks?.onAuthenticationFailure!(authenticationResult);
+              ? this.penController.callbacks?.onAuthenticationSuccess?.(false)
+              : this.penController.callbacks?.onAuthenticationFailure?.(authenticationResult);
 
           break;
         }
 
         authenticationResult.status === 1
-            ? this.penController.callbacks?.onPenAuthorized!()
-            : this.penController.callbacks?.onAuthenticationRequest!(authenticationResult);
+            ? this.penController.handlePenAuthorized()
+            : this.penController.callbacks?.onAuthenticationRequest?.(authenticationResult);
 
         break;
 
@@ -206,26 +199,26 @@ export default class PenClientParserV2 {
 
           if (noPassword)
             // Successful setup of password-less login.
-            this.penController.callbacks?.onAuthenticationSuccess!(noPassword);
+            this.penController.callbacks?.onAuthenticationSuccess?.(noPassword);
 
           break;
         }
 
         // Ed: we reset password on a failed attempt (?)
         this.state.password = "";
-        this.penController.callbacks?.onAuthenticationFailure!(passwordChange);
+        this.penController.callbacks?.onAuthenticationFailure?.(passwordChange);
 
         break;
 
       // MARK: CMD Offline
       case CMD.OFFLINE_NOTE_LIST_RESPONSE:
         const noteList = Res.NoteList(packet);
-        this.penController.callbacks?.onOfflineNoteListData!(noteList);
+        this.penController.callbacks?.onOfflineNoteListData?.(noteList);
 
         break;
       case CMD.OFFLINE_PAGE_LIST_RESPONSE:
         const pageList = Res.PageList(packet);
-        this.penController.callbacks?.onOfflinePageListData!(pageList);
+        this.penController.callbacks?.onOfflinePageListData?.(pageList);
 
         break;
       case CMD.OFFLINE_DATA_RESPONSE:
@@ -244,8 +237,8 @@ export default class PenClientParserV2 {
 
         // REVIEW: Double-check the total data size check logic. Failing on 0 size doesn't look good.
         packet.Result !== 0x00 || this.offline.totalOfflineDataSize === 0
-            ? this.penController.callbacks?.onOfflineDataRetrievalFailure!()
-            : this.penController.callbacks?.onOfflineDataRetrievalProgress!(0);
+            ? this.penController.callbacks?.onOfflineDataRetrievalFailure?.()
+            : this.penController.callbacks?.onOfflineDataRetrievalProgress?.(0);
 
         break;
 
@@ -257,8 +250,8 @@ export default class PenClientParserV2 {
       case CMD.OFFLINE_DATA_DELETE_RESPONSE:
         // NLog.log("OFFLINE_DATA_DELETE_RESPONSE", packet);
         packet.Result !== 0x00
-            ? this.penController.callbacks?.onOfflineDataDeleteFailure!()
-            : this.penController.callbacks?.onOfflineDataDeleteSuccess!();
+            ? this.penController.callbacks?.onOfflineDataDeleteFailure?.()
+            : this.penController.callbacks?.onOfflineDataDeleteSuccess?.();
 
         break;
 
@@ -272,8 +265,8 @@ export default class PenClientParserV2 {
         const status = packet.GetByte(); // 0: 전송받음 / 1: firmwareVersion 동일 / 2: 펜 디스크 공간 부족 / 3: 실패 / 4: 압축지원 안함
 
         (this.isUploading = packet.Result === 0 && status === 0)
-            ? status === 0 && this.penController.callbacks?.onFirmwareUpgradeProgress!(0)
-            : this.penController.callbacks?.onFirmwareUpgradeFailure!(status as FirmwareUpgradeFailureReason);
+            ? status === 0 && this.penController.callbacks?.onFirmwareUpgradeProgress?.(0)
+            : this.penController.callbacks?.onFirmwareUpgradeFailure?.(status as FirmwareUpgradeFailureReason);
 
         break;
 
@@ -291,19 +284,19 @@ export default class PenClientParserV2 {
         NLog.log("Using Note Set", packet.Result);
 
         const realtimeDataEnabled = packet.Result === 0x00;
-        this.penController.callbacks?.onRealtimeDataStatus!(realtimeDataEnabled)
+        this.penController.callbacks?.onRealtimeDataStatus?.(realtimeDataEnabled)
 
         break;
 
       case CMD.RES_PDS:
         const pointer = Res.PDS(packet);
-        this.penController.callbacks?.onPenPointer!(pointer);
+        this.penController.callbacks?.onPenPointer?.(pointer);
 
         break;
 
       case CMD.PEN_PROFILE_RESPONSE:
         const profile = Res.ProfileData(packet);
-        this.penController.callbacks?.onPenProfileData!(profile);
+        this.penController.callbacks?.onPenProfileData?.(profile);
 
         break;
 
@@ -314,6 +307,9 @@ export default class PenClientParserV2 {
   }
 
   private initPenState(configurationInfo: PenConfigurationInfo): void {
+    if (this.state)
+      return; // Ed: No initialization required
+
     this.state = {
       penTipType: 0,
       penTipColor: -1,
@@ -326,14 +322,9 @@ export default class PenClientParserV2 {
       isBeforeMiddle: false,
       isStartWithPaperInfo: false,
       sessionTs: -1,
-      eventCount: -1,
+      eventCount: 0,
       cmdCheck: false,
     };
-
-    !configurationInfo.Locked
-        ? this.penController.callbacks?.onPenAuthorized!()
-        : this.penController.callbacks?.onAuthenticationRequest!(
-          { retryCount: configurationInfo.RetryCount, resetCount: configurationInfo.ResetCount });
   }
 
   AuthorizationPassword(password: string): void {
@@ -646,7 +637,7 @@ export default class PenClientParserV2 {
       return;
     }
 
-    if (!this.penController.hoverMode && !this.state.isStartWithDown) {
+    if (!this.penController.isHoverModeEnabled() && !this.state.isStartWithDown) {
       if (!this.state.isStartWithPaperInfo)
         // Occurrence of a phenomenon where there is no pen down (no move),
         // but the paper information is empty and the move (down-move-up-downX-move) occurs.
@@ -681,7 +672,7 @@ export default class PenClientParserV2 {
       }
     }
 
-    if (this.penController.hoverMode && !this.state.isStartWithDown)
+    if (this.penController.isHoverModeEnabled() && !this.state.isStartWithDown)
       dot = PageDot.MakeDot(
         this.currentPaper,
         x,
@@ -748,7 +739,7 @@ export default class PenClientParserV2 {
 
     let dot = null;
 
-    if (this.penController.hoverMode && !this.state.isStartWithDown)
+    if (this.penController.isHoverModeEnabled() && !this.state.isStartWithDown)
       dot = PageDot.MakeDot(
         this.currentPaper,
         x,
@@ -770,6 +761,7 @@ export default class PenClientParserV2 {
     if (this.state.isStartWithDown && this.state.isBeforeMiddle && this.state.prevDot !== null) {
       this.MakeUpDot();
       this.resetState();
+      this.state = null;
     }
   }
 
@@ -845,7 +837,7 @@ export default class PenClientParserV2 {
       percent = (this.offline.receivedOfflineStrokes * 100) / this.offline.totalOfflineStrokes;
     }
 
-    this.penController.callbacks?.onOfflineDataRetrievalProgress!(percent);
+    this.penController.callbacks?.onOfflineDataRetrievalProgress?.(percent);
   }
 
   /**
@@ -911,7 +903,7 @@ export default class PenClientParserV2 {
     }
 
     // NLog.log(strokes)
-    this.penController.callbacks?.onOfflineDataRetrievalSuccess!(strokes);
+    this.penController.callbacks?.onOfflineDataRetrievalSuccess?.(strokes);
   }
 
   // NOTE: Request(Offline Receive Response)
@@ -1023,8 +1015,8 @@ export default class PenClientParserV2 {
         if (data !== null)
           this.penController.RequestFirmwareUpload(offset, data, status);
 
-        this.penController.callbacks?.onFirmwareUpgradeProgress!(100);
-        this.penController.callbacks?.onFirmwareUpgradeSuccess!();
+        this.penController.callbacks?.onFirmwareUpgradeProgress?.(100);
+        this.penController.callbacks?.onFirmwareUpgradeSuccess?.();
         this.isUploading = false;
 
         break;
@@ -1042,7 +1034,7 @@ export default class PenClientParserV2 {
 
       default:
         this.isUploading = false;
-        this.penController.callbacks?.onFirmwareUpgradeFailure!(FirmwareUpgradeFailureReason.Failure);
+        this.penController.callbacks?.onFirmwareUpgradeFailure?.(FirmwareUpgradeFailureReason.Failure);
 
         break;
     }
@@ -1056,7 +1048,7 @@ export default class PenClientParserV2 {
     NLog.log("[FW] send progress => Maximum : " + maximum + ", Current : " + index);
 
     const percent = (index * 100) / maximum;
-    this.penController.callbacks?.onFirmwareUpgradeProgress!(percent);
+    this.penController.callbacks?.onFirmwareUpgradeProgress?.(percent);
   }
 
   /**
@@ -1084,8 +1076,8 @@ export default class PenClientParserV2 {
    */
   SendDotReceiveEvent = (dot: Dot) => {
     // NLog.log(dot);
-    this.penController.callbacks?.onDot!(dot);
     NLog.log("ParseDot ] X:", dot.x, " Y:", dot.y, " f:", dot.f, " DotType:", dot.dotType, " Page: ", dot.pageInfo);
+    this.penController.callbacks?.onDot?.(dot);
   };
 
   dotFilter = new DotFilter(this.SendDotReceiveEvent);

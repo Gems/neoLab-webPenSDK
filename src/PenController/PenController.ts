@@ -3,7 +3,9 @@
 import PenClientParserV2 from "./PenClientParserV2";
 import * as Error from "../Model/SDKError";
 import PenRequestV2 from "./PenRequestV2";
-import { PenCallbacks, VersionInfo, DotErrorInfo } from "../Util/type";
+import {PenCallbacks, VersionInfo, DotErrorInfo, PenConfigurationInfo} from "../Util/type";
+import * as NLog from "../Util/NLog";
+import {SettingType} from "../API/PenMessageType";
 
 type HandleWrite = (u8: Uint8Array) => void;
 
@@ -14,9 +16,9 @@ export default class PenController {
   mClientV1: any;
   protocol: number;
   info: VersionInfo;
-  hoverMode: boolean;
   device: any;
   handleWrite: HandleWrite | null;
+  configurationInfo: PenConfigurationInfo | null = null;
 
   callbacks: PenCallbacks | null;
 
@@ -25,7 +27,6 @@ export default class PenController {
     this.mClientV2 = new PenRequestV2(this);
     this.protocol = 2;
     this.info = {} as VersionInfo;
-    this.hoverMode = false;
     this.device = device;
 
     this.handleWrite = null;
@@ -35,7 +36,7 @@ export default class PenController {
   /**
    * @memberof PenController
    */
-  addCallbacks(callbacks: PenCallbacks) {
+  setCallbacks(callbacks: PenCallbacks) {
     this.callbacks = callbacks;
   }
 
@@ -63,7 +64,7 @@ export default class PenController {
    * @param {DotErrorInfo} errorInfo
    */
   onErrorDetected(errorInfo: DotErrorInfo) {
-    this.callbacks?.onDotError!(errorInfo);
+    this.callbacks?.onDotError?.(errorInfo);
   }
 
   //SDK Local logic
@@ -120,7 +121,7 @@ export default class PenController {
    */
   SetPassword(oldPassword: string, newPassword: string = "") {
     if (newPassword === this.mClientV2.defaultConfig.DEFAULT_PASSWORD) {
-      this.callbacks?.onAuthenticationIllegalPassword!();
+      this.callbacks?.onAuthenticationIllegalPassword?.();
       return;
     }
 
@@ -443,6 +444,63 @@ export default class PenController {
         : this.mClientV2.OnDisconnected();
 
     this.mParserV2.OnDisconnected();
-    this.callbacks?.onPenDisconnected!();
+    this.callbacks?.onPenDisconnected?.();
+  }
+
+  handleConfigurationInfo(configurationInfo: PenConfigurationInfo) {
+    this.configurationInfo = configurationInfo;
+    this.callbacks?.onConfigurationInfo?.(configurationInfo);
+
+    !configurationInfo.Locked
+        ? this.handlePenAuthorized()
+        : this.handleAuthenticationRequest();
+  }
+
+  private handleAuthenticationRequest() {
+    this.callbacks?.onAuthenticationRequest?.({
+      retryCount: this.configurationInfo.RetryCount,
+      resetCount: this.configurationInfo.ResetCount,
+    });
+  }
+
+  handlePenAuthorized() {
+    NLog.log("Pen Authorized");
+    // Ed: I guess we request here data stored on the pen.
+    this.RequestAvailableNotes();
+    this.callbacks?.onPenAuthorized?.();
+  }
+
+  isHoverModeEnabled() {
+    return this.configurationInfo?.HoverMode;
+  }
+
+  handleSettingChange(response: { settingType: number, result: boolean }) {
+    const settingValue = this.mClientV2.settingChanges[response.settingType];
+    delete this.mClientV2.settingChanges[response.settingType];
+
+    console.log("Handle Setting Change:", response.settingType, ", value: ", settingValue, ", result: ", response.result);
+
+    if (!response.result)
+      return this.callbacks?.onPenSettingChangeFailure?.(response.settingType);
+
+    switch (response.settingType) {
+      case SettingType.Beep:
+        this.configurationInfo.Beep = !!settingValue;
+        break;
+      case SettingType.Hover:
+        this.configurationInfo.HoverMode = !!settingValue;
+        break;
+      case SettingType.TimeStamp:
+        this.configurationInfo.TimeStamp = settingValue;
+        break;
+      case SettingType.AutoPowerOn:
+        this.configurationInfo.AutoPowerOn = !!settingValue;
+        break;
+      case SettingType.AutoPowerOffTime:
+        this.configurationInfo.AutoShutdownTime = settingValue;
+        break;
+    }
+
+    this.callbacks?.onPenSettingChangeSuccess?.(response.settingType, settingValue);
   }
 }
