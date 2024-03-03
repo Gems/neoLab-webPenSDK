@@ -56,6 +56,8 @@ export interface Dot extends ScreenDot {
   penTipType: PenTipTypes;
   timeDiff: number;
   timeStamp: number;
+
+  Clone(dotType?: DotTypes): Dot;
 }
 
 export interface PenPointer {
@@ -77,7 +79,7 @@ export type View = {
 export type Paper = {
   section: number;
   owner: number;
-  note: number;
+  book: number;
   page: number;
   time?: number;
   timeDiff?: number;
@@ -156,9 +158,10 @@ export type OnFirmwareUpgradeSuccess = () => void;
 export type OnRealtimeDataStatus = (enabled: boolean) => void;
 export type OnPenPointer = (pointer: PenPointer) => void;
 export type OnPuiCommand = (command: string) => void;
-export type OnDot = (dot: Dot) => void;
 export type OnDotError = (errorInfo: DotErrorInfo) => void;
 export type OnPage = (page: PageInfo) => void;
+export type OnDot = (dot: Dot) => void;
+export type OnStroke = (stroke: Dot[]) => void;
 
 export type OnPenProfileData = (profileData: any) => void; // TODO: Clarify data type
 
@@ -197,9 +200,10 @@ export type PenCallbacks = {
   onRealtimeDataStatus?: OnRealtimeDataStatus;
   onPenPointer?: OnPenPointer;
   onPuiCommand?: OnPuiCommand;
-  onDot?: OnDot;
   onDotError?: OnDotError;
   onPage?: OnPage;
+  onDot?: OnDot;
+  onStroke?: OnStroke;
 
   onPenProfileData?: OnPenProfileData;
 

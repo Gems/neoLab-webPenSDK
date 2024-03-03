@@ -87,8 +87,7 @@ export function isPUI(pageInfo: PageInfo): boolean {
 }
 
 export function isPUIOnPage(paper: Paper, x: number, y: number): boolean {
-  const pageInfo = { section: paper.section, owner: paper.owner, book: paper.note, page: paper.page };
-  const pageId = buildPageId(pageInfo);
+  const pageId = buildPageId(paper as PageInfo);
   const pc = PUIController.getInstance();
   const isInclude = Object.keys(pc._onlyPageSymbols).includes(pageId);
 
@@ -96,6 +95,7 @@ export function isPUIOnPage(paper: Paper, x: number, y: number): boolean {
     const point_nu = {x, y};
     return pc.checkPuiCommand(paper, point_nu);
   }
+
   return false;
 }
 
@@ -274,8 +274,7 @@ export default class PUIController {
   };
 
   private getPuiCommand_sync = (paper: Paper, point_nu: { x: number; y: number }) => {
-    const pageInfo = { section: paper.section, owner: paper.owner, book: paper.note, page: paper.page };
-    const pageId = buildPageId(pageInfo);
+    const pageId = buildPageId(paper as PageInfo);
     const symbols: { [pageId: string]: PuiSymbolType[] } = this._onlyPageSymbolFlag ? this._onlyPageSymbols : this._pageSymbols;
 
     const pageSymbols = symbols[pageId];

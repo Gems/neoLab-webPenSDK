@@ -30,57 +30,50 @@ export default class DotFilter {
   }
 
   put = (dot: Dot) => {
-    this.filterProcess(dot);
-  };
-  /**
-   * Put dot
-   */
-  filterProcess = (dot: Dot) => {
-    let mdot = dot;
-    if (!this.validateCode(mdot)) {
+    if (!this.validateCode(dot))
       return;
-    }
 
-    if (mdot.dotType == DotTypes.PEN_ERROR || mdot.dotType == DotTypes.PEN_INFO) {
-      this.sendDot(mdot);
-    } else if (mdot.dotType == DotTypes.PEN_DOWN) {
+    if (dot.dotType == DotTypes.PEN_ERROR || dot.dotType == DotTypes.PEN_INFO)
+      return this.sendDot(dot);
+
+    if (dot.dotType == DotTypes.PEN_DOWN) {
       // Start Dot is put in the first dot.
-      this.dot1 = mdot;
-      this.sendDot(mdot);
-    } else if (mdot.dotType == DotTypes.PEN_MOVE) {
+      this.dot1 = dot;
+      this.sendDot(dot);
+    } else if (dot.dotType == DotTypes.PEN_MOVE) {
       // Just put it in the middle of the first
       if (this.secondCheck) {
-        this.dot2 = mdot;
+        this.dot2 = dot;
         this.secondCheck = false;
       }
       // Middle next Dot checks Middle validation check when first verification succeeds, and next Dot when failure
       else if (this.thirdCheck) {
-        if (this.validateStartDot(this.dot1, this.dot2, mdot)) {
+        if (this.validateStartDot(this.dot1, this.dot2, dot)) {
           this.sendDot(this.dot1);
 
-          if (this.validateMiddleDot(this.dot1, this.dot2, mdot)) {
+          if (this.validateMiddleDot(this.dot1, this.dot2, dot)) {
             this.sendDot(this.dot2);
             this.dot1 = this.dot2;
-            this.dot2 = mdot;
+            this.dot2 = dot;
           } else {
-            this.dot2 = mdot;
+            this.dot2 = dot;
           }
         } else {
           this.dot1 = this.dot2;
-          this.dot2 = mdot;
+          this.dot2 = dot;
         }
 
         this.thirdCheck = false;
       } else {
-        if (this.validateMiddleDot(this.dot1, this.dot2, mdot)) {
+        if (this.validateMiddleDot(this.dot1, this.dot2, dot)) {
           this.sendDot(this.dot2);
           this.dot1 = this.dot2;
-          this.dot2 = mdot;
+          this.dot2 = dot;
         } else {
-          this.dot2 = mdot;
+          this.dot2 = dot;
         }
       }
-    } else if (mdot.dotType == DotTypes.PEN_UP) {
+    } else if (dot.dotType == DotTypes.PEN_UP) {
       var validateStartDotFlag = true;
       var validateMiddleDotFlag = true;
       //If only one dot is entered and only one Down 1, Move 1, End is entered
@@ -89,7 +82,7 @@ export default class DotFilter {
         this.dot2 = this.dot1;
       }
       if (this.thirdCheck && this.dot1.dotType == DotTypes.PEN_DOWN) {
-        if (this.validateStartDot(this.dot1, this.dot2, mdot)) {
+        if (this.validateStartDot(this.dot1, this.dot2, dot)) {
           this.sendDot(this.dot1);
         } else {
           validateStartDotFlag = false;
@@ -97,9 +90,9 @@ export default class DotFilter {
       }
 
       // Middle Dot Verification
-      if (this.validateMiddleDot(this.dot1, this.dot2, mdot)) {
+      if (this.validateMiddleDot(this.dot1, this.dot2, dot)) {
         if (!validateStartDotFlag) {
-          this.makeDownDot = mdot;
+          this.makeDownDot = dot;
           this.makeDownDot.dotType = DotTypes.PEN_DOWN;
           this.sendDot(this.makeDownDot);
         }
@@ -110,18 +103,19 @@ export default class DotFilter {
       }
 
       // Last Dot Verification
-      if (this.validateEndDot(this.dot1, this.dot2, mdot)) {
+      if (this.validateEndDot(this.dot1, this.dot2, dot)) {
         if (!validateStartDotFlag && !validateMiddleDotFlag) {
-          this.makeDownDot = mdot;
+          this.makeDownDot = dot;
           this.makeDownDot.dotType = DotTypes.PEN_DOWN;
           this.sendDot(this.makeDownDot);
         }
+
         if (this.thirdCheck && !validateMiddleDotFlag) {
-          this.makeMoveDot = mdot;
+          this.makeMoveDot = dot;
           this.makeMoveDot.dotType = DotTypes.PEN_MOVE;
           this.sendDot(this.makeMoveDot);
         }
-        this.sendDot(mdot);
+        this.sendDot(dot);
       } else {
         this.dot2.dotType = DotTypes.PEN_UP;
         this.sendDot(this.dot2);
@@ -136,10 +130,7 @@ export default class DotFilter {
   };
 
   validateCode = (d: Dot) => {
-    if (MAX_NOTE_ID < d.pageInfo.book || MAX_PAGE_ID < d.pageInfo.page) {
-      return false;
-    }
-    return true;
+    return d.pageInfo.book < MAX_NOTE_ID && d.pageInfo.page < MAX_PAGE_ID;
   };
 
   // ==============================================

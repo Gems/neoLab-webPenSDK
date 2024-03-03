@@ -1,7 +1,11 @@
-var debug = true;
+let isDebugEnabled = true;
 
 function log(...arg: any) {
-  if (debug) console.log(...arg);
+  console.log(...arg);
+}
+
+function debug(...arg: any) {
+  if (isDebugEnabled) console.log(...arg);
 }
 
 function error(...arg: any) {
@@ -9,7 +13,7 @@ function error(...arg: any) {
 }
 
 function setDebug(bool: boolean) {
-  debug = bool;
+  isDebugEnabled = bool;
 }
 
 export { log, error, debug, setDebug };

@@ -32,9 +32,9 @@ const point72ToNcode = (p: number) => {
 const getNprojUrl = async (pageInfo: PageInfo) => {
   try {
     const pageUrl = `nproj/${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.nproj`;
-    console.log("Downloading URL for: " + pageUrl);
+    console.debug("Downloading URL for: " + pageUrl);
     const nprojUrl = await getDownloadURL(ref(storage, pageUrl));
-    console.log("NProj URL: " + nprojUrl);
+    console.debug("NProj URL: " + nprojUrl);
 
     return nprojUrl;
   } catch (err) {
@@ -49,7 +49,7 @@ const getNprojUrl = async (pageInfo: PageInfo) => {
 const setNprojInPuiController = async (url: string | null, pageInfo: PageInfo) => {
   const nprojUrl = url ?? await getNprojUrl(pageInfo);
 
-  NLog.log("[NoteServer] In the PUIController, set nporj at the following url => " + nprojUrl);
+  NLog.debug("[NoteServer] In the PUIController, set nporj at the following url => " + nprojUrl);
 
   await PUIController.getInstance().fetchOnlyPageSymbols(nprojUrl, pageInfo);
 };
@@ -62,7 +62,7 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
   const page = pageInfo.page;
   const nprojUrl = url ?? await getNprojUrl(pageInfo);
 
-  NLog.log("[NoteServer] Get the page margin from the following url => " + nprojUrl);
+  NLog.debug("[NoteServer] Get the page margin from the following url => " + nprojUrl);
 
   try {
     const res = await fetch(nprojUrl);
@@ -85,7 +85,7 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
     if (page_item === undefined)
       throw new Error("Page item is undefined");
 
-    NLog.log(`Target SOBP: ${section}(section) ${owner}(owner) ${book}(book) ${page}(page)`);
+    NLog.debug(`Target SOBP: ${section}(section) ${owner}(owner) ${book}(book) ${page}(page)`);
 
     let x1, x2, y1, y2, crop_margin, l, t, r, b;
 
@@ -118,16 +118,16 @@ const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
  * GET note image function
  */
 const getNoteImage = async (pageInfo: PageInfo): Promise<string> => {
-  const zipUrl = `png//${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.zip`;
+  const zipUrl = `png/${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.zip`;
   const page = pageInfo.page;
 
   const jszip = new JSZip();
 
-  console.log("Downloading URL for: " + zipUrl);
+  console.debug("Downloading URL for: " + zipUrl);
 
   return await getDownloadURL(ref(storage, zipUrl))
       .then(async (url) => {
-        console.log("Zip URL: " + url);
+        console.debug("Zip URL: " + url);
         const zipBlob = await fetch(url).then((res) => res.blob());
 
         return await jszip

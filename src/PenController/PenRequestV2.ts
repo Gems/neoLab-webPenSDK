@@ -44,7 +44,7 @@ function createProfileRequestPacketBuilder(type: ProfileType/*, name?: string, p
 export default class PenRequestV2 {
   penController: PenController;
   defaultConfig: DefaultConfig;
-  state: any;
+  state: { isFwCompress: boolean; fwPacketSize: number; fwFile: ByteUtil | null };
   settingChanges: any = {};
 
   constructor(penController: PenController) {
@@ -764,10 +764,21 @@ export default class PenRequestV2 {
    * @returns {boolean}
    */
   private Send(packet: RequestPacketBuilder): boolean {
-    if (!this.penController.handleWrite)
-      console.warn("No Writing Handle initialized yet");
-
-    this.penController.handleWrite!(packet.build());
+    this.penController.writeData(packet.build());
     return true;
+  }
+
+  getNextChunk(offset: number): { data: Uint8Array, currentChunk: number, totalChunks: number } | null {
+    if (!this.state.fwFile)
+      return null;
+
+    const packetSize = this.state.fwPacketSize;
+    const totalSize = this.state.fwFile.Size;
+
+    const totalChunks = Math.ceil(totalSize / packetSize);
+    const currentChunk = offset / packetSize;
+    const data = this.state.fwFile.GetBytesWithOffset(offset, packetSize);
+
+    return { data, currentChunk, totalChunks };
   }
 }

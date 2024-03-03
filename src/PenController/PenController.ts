@@ -1,36 +1,44 @@
 // noinspection JSUnusedGlobalSymbols
 
 import PenClientParserV2 from "./PenClientParserV2";
-import * as Error from "../Model/SDKError";
 import PenRequestV2 from "./PenRequestV2";
-import {PenCallbacks, VersionInfo, DotErrorInfo, PenConfigurationInfo} from "../Util/type";
+import {
+  PenCallbacks,
+  VersionInfo,
+  DotErrorInfo,
+  PenConfigurationInfo,
+  AuthorizationRequest,
+  FirmwareUpgradeFailureReason, PenPointer, Dot, PageInfo, DotTypes
+} from "../Util/type";
 import * as NLog from "../Util/NLog";
-import {SettingType} from "../API/PenMessageType";
+import {ErrorType, SettingType} from "../API/PenMessageType";
 
-type HandleWrite = (u8: Uint8Array) => void;
+type WriteHandle = (u8: Uint8Array) => void;
 
+const dotErrorTypes = Object.entries(ErrorType)
+    .reduce((acc, [key, value]) => ({ ...acc, [value]: key }), {});
+
+const dotTypes = Object.entries(DotTypes)
+    .reduce((acc, [key, value]) => ({ ...acc, [value]: key }), {});
 
 export default class PenController {
-  mParserV2: PenClientParserV2;
-  mClientV2: PenRequestV2;
-  mClientV1: any;
-  protocol: number;
+  readonly id: string;
   info: VersionInfo;
-  device: any;
-  handleWrite: HandleWrite | null;
   configurationInfo: PenConfigurationInfo | null = null;
 
-  callbacks: PenCallbacks | null;
+  private writer: WriteHandle | null = null;
+  private readonly writingBuffer: Array<Uint8Array> = [];
 
-  constructor(device: BluetoothDevice) {
-    this.mParserV2 = new PenClientParserV2(this);
-    this.mClientV2 = new PenRequestV2(this);
-    this.protocol = 2;
+  clientParser: PenClientParserV2;
+  clientCaller: PenRequestV2;
+
+  private callbacks: PenCallbacks | null = null;
+
+  constructor(id: string) {
+    this.id = id;
+    this.clientParser = new PenClientParserV2(this);
+    this.clientCaller = new PenRequestV2(this);
     this.info = {} as VersionInfo;
-    this.device = device;
-
-    this.handleWrite = null;
-    this.callbacks = null;
   }
 
   /**
@@ -40,21 +48,37 @@ export default class PenController {
     this.callbacks = callbacks;
   }
 
-  // MARK: Step2 Add Write Pipe
-  addWrite(writeHandler: HandleWrite) {
-    this.handleWrite = writeHandler;
+  setWriter(writeHandle: WriteHandle) {
+    if (!this.writingBuffer.length) {
+      this.writer = writeHandle;
+      return;
+    }
+
+    let intervalId: any;
+    intervalId = setInterval(() => this.handleWritingBuffer(writeHandle, intervalId), 10);
+  }
+
+  private handleWritingBuffer(writeHandle: WriteHandle, intervalId: any) {
+    if (!this.writingBuffer.length) {
+     this.writer = writeHandle;
+     return clearInterval(intervalId);
+    }
+
+    writeHandle(this.writingBuffer.shift());
+  }
+
+  writeData(buff: Uint8Array) {
+    this.writer
+        ? this.writer(buff)
+        : this.writingBuffer.push(buff);
   }
 
   /**
    * Step3 Send Data from Pen
-   * @param {array} buff - uint8array
+   * @param {array} buff - Uint8Array
    */
-  putData(buff: Uint8Array) {
-    if (this.protocol === 1) {
-      // this.mClientV1.ProtocolParse(buff, buff.Length);
-    } else {
-      this.mParserV2.ProtocolParse(buff);
-    }
+  handleData(buff: Uint8Array) {
+    this.clientParser.ProtocolParse(buff);
   }
 
   // Error process
@@ -64,6 +88,8 @@ export default class PenController {
    * @param {DotErrorInfo} errorInfo
    */
   onErrorDetected(errorInfo: DotErrorInfo) {
+    // @ts-ignore
+    NLog.error("Dot Error Detected: ", "type: ", dotErrorTypes[errorInfo.ErrorType], errorInfo);
     this.callbacks?.onDotError?.(errorInfo);
   }
 
@@ -76,30 +102,6 @@ export default class PenController {
   // Step2
   localProcessPenSettingInfo() {
     this.RequestPenStatus();
-  }
-
-  /**
-   * 프로토콜 버전에 따라 펜에 요청하는 함수를 분기 실행하는 함수
-   * @param {any} requestV1
-   * @param {any} requestV2
-   * @returns
-   */
-  Request(requestV1: any, requestV2: any) {
-    // if ( PenClient === null || !PenClient.Alive || protocol === -1 ) {
-    if (this.protocol === -1)
-      throw new Error.SDKError("RequestIsUnreached");
-
-    if (this.protocol === 1) {
-      if (!requestV1)
-        throw new Error.SDKError("UnavailableRequest");
-
-      return requestV1();
-    }
-
-    if (!requestV2)
-      throw new Error.SDKError("UnavailableRequest");
-
-    return requestV2();
   }
 
   // MARK: Request
@@ -120,19 +122,13 @@ export default class PenController {
    * @memberof PenController
    */
   SetPassword(oldPassword: string, newPassword: string = "") {
-    if (newPassword === this.mClientV2.defaultConfig.DEFAULT_PASSWORD) {
+    if (newPassword === this.clientCaller.defaultConfig.DEFAULT_PASSWORD) {
       this.callbacks?.onAuthenticationIllegalPassword?.();
       return;
     }
 
-    this.mParserV2.AuthorizationPassword(newPassword);
-
-    this.Request(
-      () => {},
-      () => {
-        this.mClientV2.ReqSetUpPassword(oldPassword, newPassword);
-      }
-    );
+    this.clientParser.AuthorizationPassword(newPassword);
+    this.clientCaller.ReqSetUpPassword(oldPassword, newPassword);
   }
 
   /**
@@ -140,20 +136,14 @@ export default class PenController {
    * @param {string} password
    */
   AuthorizeWithPassword(password: string): boolean {
-    return this.Request(
-      () => this.mClientV1.AuthorizeWithPassword(password),
-      () => this.mClientV2.AuthorizeWithPassword(password)
-    );
+    return this.clientCaller.AuthorizeWithPassword(password);
   }
 
   /**
    * 펜에 대한 각종 설정 확인을 요청하는 함수
    */
   RequestPenStatus() {
-    this.Request(
-      () => this.mClientV1.ReqPenStatus(),
-      () => this.mClientV2.ReqPenStatus()
-    );
+    this.clientCaller.ReqPenStatus();
   }
 
   /**
@@ -161,7 +151,7 @@ export default class PenController {
    * - 1970년 1월 1일부터 millisecond tick (지금은 현재 시각으로 변경)
    */
   SetRtcTime() {
-    this.Request(null, () => this.mClientV2.ReqSetupTime());
+    this.clientCaller.ReqSetupTime();
   }
 
   /**
@@ -170,10 +160,7 @@ export default class PenController {
    * @param {number} minute
    */
   SetAutoPowerOffTime(minute: number) {
-    this.Request(
-      () => this.mClientV1.ReqSetupPenAutoShutdownTime(minute),
-      () => this.mClientV2.ReqSetupPenAutoShutdownTime(minute)
-    );
+    this.clientCaller.ReqSetupPenAutoShutdownTime(minute);
   }
 
   /**
@@ -181,7 +168,7 @@ export default class PenController {
    * @param {boolean} enable - on / off
    */
   SetPenCapPowerOnOffEnable(enable: boolean) {
-    this.Request(null, () => this.mClientV2.ReqSetupPenCapPower(enable));
+    this.clientCaller.ReqSetupPenCapPower(enable);
   }
 
   /**
@@ -189,10 +176,7 @@ export default class PenController {
    * @param {boolean} enable - on / off
    */
   SetAutoPowerOnEnable(enable: boolean) {
-    this.Request(
-      () => this.mClientV1.ReqSetupPenAutoPowerOn(enable),
-      () => this.mClientV2.ReqSetupPenAutoPowerOn(enable)
-    );
+    this.clientCaller.ReqSetupPenAutoPowerOn(enable);
   }
 
   /**
@@ -200,10 +184,7 @@ export default class PenController {
    * @param {boolean} enable - on / off
    */
   SetBeepSoundEnable(enable: boolean) {
-    this.Request(
-      () => this.mClientV1.ReqSetupPenBeep(enable),
-      () => this.mClientV2.ReqSetupPenBeep(enable)
-    );
+    this.clientCaller.ReqSetupPenBeep(enable);
   }
 
   /**
@@ -212,10 +193,7 @@ export default class PenController {
    * @param {boolean} enable - on / off
    */
   SetHoverEnable(enable: boolean) {
-    this.Request(
-      () => this.mClientV1.SetHoverEnable(enable),
-      () => this.mClientV2.ReqSetupHoverMode(enable)
-    );
+    this.clientCaller.ReqSetupHoverMode(enable);
   }
 
   /**
@@ -223,7 +201,7 @@ export default class PenController {
    * @param {boolean} enable - on / off
    */
   SetOfflineDataEnable(enable: boolean) {
-    this.Request(null, () => this.mClientV2.ReqSetupOfflineData(enable));
+    this.clientCaller.ReqSetupOfflineData(enable);
   }
 
   /**
@@ -231,10 +209,7 @@ export default class PenController {
    * @param {number} color - argb
    */
   SetColor(color: number) {
-    this.Request(
-      () => this.mClientV1.ReqSetupPenColor(color),
-      () => this.mClientV2.ReqSetupPenColor(color)
-    );
+    this.clientCaller.ReqSetupPenColor(color);
   }
 
   /**
@@ -243,20 +218,14 @@ export default class PenController {
    * @param {number} step - 0 ~ 4 ( 0이 가장 민감 )
    */
   SetSensitivity(step: number) {
-    this.Request(
-      () => this.mClientV1.ReqSetupPenSensitivity(step),
-      () => this.mClientV2.ReqSetupPenSensitivity(step)
-    );
+    this.clientCaller.ReqSetupPenSensitivity(step);
   }
 
   /**
    * 펜 설정 중 펜의 디스크를 초기화 요청하는 함수
    */
   RequestInitPenDisk() {
-    this.Request(
-      () => this.mClientV1.ReqInitPenDisk(),
-      () => this.mClientV2.ReqInitPenDisk()
-    );
+    this.clientCaller.ReqInitPenDisk();
   }
 
   /**
@@ -267,10 +236,7 @@ export default class PenController {
    * @param {Array} notes - If null, notes are not differentiated.
    */
   RequestAvailableNotes(sections?: number[], owners?: number[], notes?: number[]) {
-    this.Request(
-      () => this.mClientV1.ReqAddUsingNotes(sections, owners, notes),
-      () => this.mClientV2.ReqAddUsingNotes(sections, owners, notes)
-    );
+    this.clientCaller.ReqAddUsingNotes(sections, owners, notes);
   }
 
   // Offline List
@@ -282,10 +248,7 @@ export default class PenController {
    * @param {number} owner
    */
   RequestOfflineNoteList(section: number, owner: number) {
-    this.Request(
-      () => this.mClientV1.ReqOfflineDataList(section, owner),
-      () => this.mClientV2.ReqOfflineNoteList(section, owner)
-    );
+    this.clientCaller.ReqOfflineNoteList(section, owner);
   }
 
   /**
@@ -296,10 +259,7 @@ export default class PenController {
    * @param {number} note
    */
   RequestOfflinePageList(section: number, owner: number, note: number) {
-    this.Request(
-      () => this.mClientV1.ReqOfflineDataList(section, owner, note),
-      () => this.mClientV2.ReqOfflinePageList(section, owner, note)
-    );
+    this.clientCaller.ReqOfflinePageList(section, owner, note);
   }
 
   // Offline Data
@@ -313,9 +273,7 @@ export default class PenController {
    * @returns
    */
   RequestOfflineData(section: number, owner: number, note: number, deleteOnFinished: boolean = true, pages: any = []) {
-    return this.Request(
-      () => this.mClientV1.ReqOfflineData(section, owner, note, deleteOnFinished, pages),
-      () => this.mClientV2.ReqOfflineData(section, owner, note, deleteOnFinished, pages));
+    this.clientCaller.ReqOfflineData(section, owner, note, deleteOnFinished, pages);
   }
 
   /**
@@ -326,10 +284,7 @@ export default class PenController {
    * @param {array} notes
    */
   RequestOfflineDelete(section: number, owner: number, notes: number[]) {
-    this.Request(
-      () => this.mClientV1.ReqOfflineDelete(section, owner, notes),
-      () => this.mClientV2.ReqOfflineDelete(section, owner, notes)
-    );
+    this.clientCaller.ReqOfflineDelete(section, owner, notes);
   }
 
   // Firmware Update
@@ -340,10 +295,7 @@ export default class PenController {
    * @param {boolean} isCompressed
    */
   RequestFirmwareInstallation(file: File, version: string, isCompressed: boolean) {
-    this.Request(
-      () => this.mClientV1.ReqPenSwUpgrade(file, version, isCompressed),
-      () => this.mClientV2.ReqPenSwUpgrade(file, version, isCompressed)
-    );
+    this.clientCaller.ReqPenSwUpgrade(file, version, isCompressed);
   }
 
   /**
@@ -353,10 +305,7 @@ export default class PenController {
    * @param {number} status
    */
   RequestFirmwareUpload(offset: number, data: Uint8Array, status: number) {
-    this.Request(
-      () => this.mClientV1.ReqPenSwUpload(offset, data, status),
-      () => this.mClientV2.ReqPenSwUpload(offset, data, status)
-    );
+    this.clientCaller.ReqPenSwUpload(offset, data, status);
   }
 
   /**
@@ -364,10 +313,7 @@ export default class PenController {
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
    */
   RequestProfileCreate(/*name: string, password: string*/) {
-    this.Request(
-      () => this.mClientV1.ReqProfileCreate(),
-      () => this.mClientV2.ReqProfileCreate()
-    );
+    this.clientCaller.ReqProfileCreate();
   };
 
   /**
@@ -375,10 +321,7 @@ export default class PenController {
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
    */
   RequestProfileDelete(/*name: string, password: string*/) {
-    this.Request(
-      () => this.mClientV1.ReqProfileDelete(),
-      () => this.mClientV2.ReqProfileDelete()
-    );
+    this.clientCaller.ReqProfileDelete();
   };
 
   /**
@@ -386,10 +329,7 @@ export default class PenController {
    * - 프로파일은 네오랩을 통해 인증받은 뒤에 사용가능하기에, 현재는 고정값을 이용
    */
   RequestProfileInfo(/*name: string*/) {
-    this.Request(
-      () => this.mClientV1.ReqProfileInfo(),
-      () => this.mClientV2.ReqProfileInfo()
-    );
+    this.clientCaller.ReqProfileInfo();
   };
 
   /**
@@ -398,14 +338,7 @@ export default class PenController {
    * @param {Array} data
    */
   RequestProfileWriteValue(/*name: string, password: string,*/ data: { [key: string]: any }) {
-    // this.ReqProfileWriteValue("test","test",{
-    //   "test": 123
-    // })
-
-    this.Request(
-      () => this.mClientV1.ReqProfileWriteValue(data),
-      () => this.mClientV2.ReqProfileWriteValue(data)
-    );
+    this.clientCaller.ReqProfileWriteValue(data);
   };
 
   /**
@@ -414,10 +347,7 @@ export default class PenController {
    * @param {Array} keys
    */
   RequestProfileReadValue(/*name: string,*/ keys: string[]) {
-    this.Request(
-      () => this.mClientV1.ReqProfileReadValue(keys),
-      () => this.mClientV2.ReqProfileReadValue(keys)
-    );
+    this.clientCaller.ReqProfileReadValue(keys);
   };
 
   /**
@@ -426,24 +356,21 @@ export default class PenController {
    * @param {Array} keys
    */
   RequestProfileDeleteValue = (/*name: string, password: string,*/ keys: string[]) => {
-    this.Request(
-      () => this.mClientV1.ReqProfileDeleteValue(keys),
-      () => this.mClientV2.ReqProfileDeleteValue(keys)
-    );
+    this.clientCaller.ReqProfileDeleteValue(keys);
   };
 
-  OnConnected() {
-    if (this.protocol !== 1)
-      //this.mParserV2.state.first = true;
-      this.mClientV2.ReqVersionTask();
+  RequestVersion() {
+    this.clientCaller.ReqVersionTask();
   }
 
-  OnDisconnected() {
-    this.protocol === 1
-        ? this.mClientV1.OnDisconnected()
-        : this.mClientV2.OnDisconnected();
+  getNextChunk(offset: number): { data: Uint8Array, currentChunk: number, totalChunks: number } | null {
+    return this.clientCaller.getNextChunk(offset);
+  }
 
-    this.mParserV2.OnDisconnected();
+  handleDisconnect() {
+    this.clientCaller.OnDisconnected();
+    this.clientParser.OnDisconnected();
+
     this.callbacks?.onPenDisconnected?.();
   }
 
@@ -475,8 +402,8 @@ export default class PenController {
   }
 
   handleSettingChange(response: { settingType: number, result: boolean }) {
-    const settingValue = this.mClientV2.settingChanges[response.settingType];
-    delete this.mClientV2.settingChanges[response.settingType];
+    const settingValue = this.clientCaller.settingChanges[response.settingType];
+    delete this.clientCaller.settingChanges[response.settingType];
 
     console.log("Handle Setting Change:", response.settingType, ", value: ", settingValue, ", result: ", response.result);
 
@@ -502,5 +429,100 @@ export default class PenController {
     }
 
     this.callbacks?.onPenSettingChangeSuccess?.(response.settingType, settingValue);
+  }
+
+  handleConnection(versionInfo: VersionInfo) {
+    this.info = versionInfo;
+    this.callbacks?.onPenConnected?.(versionInfo);
+
+    this.clientCaller.ReqPenStatus();
+  }
+
+  handleShutdown(shutdownReason: number) {
+    this.callbacks?.onPowerOffEvent?.(shutdownReason);
+  }
+
+  handleLowBattery(battery: number) {
+    this.callbacks?.onBatteryLowEvent?.(battery);
+  }
+
+  handleSuccessfulAuthentication(noPassword: boolean) {
+    // REVIEW: This event is a bit strange here. Especially considering the one below. Consider removing it.
+    //         Also, most probably 'successful authorization handling is required on 'noPassword'.
+    this.callbacks?.onAuthenticationSuccess?.(noPassword);
+
+    if (noPassword)
+      this.handlePenAuthorized();
+  }
+
+  handleFailedAuthentication(authenticationResult: AuthorizationRequest) {
+    this.callbacks?.onAuthenticationFailure?.(authenticationResult);
+  }
+
+  handleOfflineNoteListData(noteList: Array<{ section: number; owner: number; note: number }>) {
+    this.callbacks?.onOfflineNoteListData?.(noteList);
+  }
+
+  handleOfflinePageListData(pageList: { section: number; owner: number; note: number; pages: number[] }) {
+    this.callbacks?.onOfflinePageListData?.(pageList)
+  }
+
+  handleOfflineDataRetrievalFailure() {
+    this.callbacks?.onOfflineDataRetrievalFailure?.();
+  }
+
+  handleOfflineDataRetrievalProgress(progress: number) {
+    this.callbacks?.onOfflineDataRetrievalProgress?.(progress);
+  }
+
+  handleOfflineDataDeleteSuccess() {
+    this.callbacks?.onOfflineDataDeleteSuccess?.();
+  }
+
+  handleFirmwareUpgradeProgress(progress: number) {
+    this.callbacks?.onFirmwareUpgradeProgress?.(progress);
+  }
+
+  handleFirmwareUpgradeFailure(status: FirmwareUpgradeFailureReason) {
+    this.callbacks?.onFirmwareUpgradeFailure?.(status);
+  }
+
+  handleRealtimeDataStatus(enabled: boolean) {
+    this.callbacks?.onRealtimeDataStatus?.(enabled);
+  }
+
+  handlePenPointer(pointer: PenPointer) {
+    this.callbacks?.onPenPointer?.(pointer);
+  }
+
+  handleProfileData(profile: any) {
+    this.callbacks?.onPenProfileData?.(profile);
+  }
+
+  handlePuiCommand(command: string) {
+    this.callbacks?.onPuiCommand?.(command);
+  }
+
+  handleOfflineDataRetrievalSuccess(strokes: Array<{ dots: Dot[] }>) {
+    this.callbacks?.onOfflineDataRetrievalSuccess?.(strokes);
+  }
+
+  handleFirmwareUpgradeSuccess() {
+    this.callbacks?.onFirmwareUpgradeSuccess?.();
+  }
+
+  handleDot(dot: Dot) {
+    // @ts-ignore
+    NLog.debug(`Handle Dot: (type: ${dotTypes[dot.dotType]})`, dot);
+    this.callbacks?.onDot?.(dot);
+  }
+
+  handlePageInfo(pageInfo: PageInfo){
+    NLog.debug("Handle PageInfo: ", pageInfo);
+    this.callbacks?.onPage?.(pageInfo);
+  }
+
+  handleStroke(stroke: Dot[]) {
+    this.callbacks?.onStroke?.(stroke);
   }
 }

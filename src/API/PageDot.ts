@@ -48,7 +48,7 @@ class PageDot implements Dot {
     builder
       .owner(paper.owner)
       .section(paper.section)
-      .note(paper.note)
+      .note(paper.book)
       .page(paper.page)
       .timeDiff(paper.timeDiff)
       .timeStamp(paper.time)

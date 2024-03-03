@@ -1,8 +1,7 @@
 import PenController from "./PenController";
-import {Dot, PageInfo, PenCallbacks} from "../Util/type";
+import {Dot, PageInfo} from "../Util/type";
 import * as NLog from "../Util/NLog";
 import {SDKversion} from "../Util/SDKVersion";
-import {buildPageId, isPlatePaper, isSamePage} from "../Util/utils";
 import ByteUtil from "../Util/ByteUtil";
 
 interface BluetoothService {
@@ -26,6 +25,7 @@ const service128: BluetoothService = {
 class PenHelper {
   pens: PenController[];
   controller: PenController;
+  device: any;
   connectingQueue: string[];
   page: PageInfo;
   dotStorage: { [key: string]: Dot[] };
@@ -53,31 +53,30 @@ class PenHelper {
       write: BluetoothRemoteGATTCharacteristic,
       controller: PenController) {
 
-    // Read Set
-    await read.startNotifications();
-
-    read.addEventListener("characteristicvaluechanged", (event: any) => {
+    read.oncharacteristicvaluechanged = (event: any) => {
       const value = event.target.value;
       const buffer: ByteUtil = new ByteUtil();
 
       for (let i = 0; i < value.byteLength; i++)
         buffer.PutByte(value.getUint8(i));
 
-      controller.putData(buffer.ToU8Array());
-    });
+      controller.handleData(buffer.ToU8Array());
+    };
 
     // Write Set
-    controller.addWrite((data: Uint8Array) => write
-        .writeValue(data)
-        .then(() => NLog.log("write success CMD: ", "0x" + data[1].toString(16), data[1]))
-        .catch((err: any) => {
-          NLog.log("write Error", err);
+    controller.setWriter((data: Uint8Array) => write
+      .writeValue(data)
+      .then(() => NLog.log("write success CMD: ", "0x" + data[1].toString(16), data[1]))
+      .catch((err: any) => {
+        NLog.error("write Error", err);
 
-          if (err instanceof DOMException)
-            setTimeout(() => write.writeValue(data), 500);
-        }));
+        if (err instanceof DOMException)
+          setTimeout(() => write.writeValue(data), 500);
+      }));
+
+    // Read Set
+    await read.startNotifications();
   };
-
 
   /**
    * @returns {boolean}
@@ -87,7 +86,7 @@ class PenHelper {
   }
 
   private isConnectedOrConnecting = (device: BluetoothDevice) => {
-    return this.pens.some((pen) => pen.device.id === device.id) || this.connectingQueue.includes(device.id);
+    return this.pens.some((pen) => pen.id === device.id) || this.connectingQueue.includes(device.id);
   };
 
   private addDeviceToConnectingQueue = (device: BluetoothDevice) => {
@@ -186,18 +185,14 @@ class PenHelper {
       const gattServer = (await device.gatt?.connect()) as BluetoothRemoteGATTServer;
       NLog.log("GATT Server", gattServer);
 
-      const controller = new PenController(device);
-      device.ongattserverdisconnected = this.onDisconnected.bind(this, controller);
+      this.device = device;
+      device.ongattserverdisconnected = this.onDisconnected.bind(this);
 
-      //await this.bindService(service16, gattServer, controller);
-      await this.bindService(service128, gattServer, controller);
+      // REVIEW: Rewrite this part to make it the service binding in sequence and stop on the first successful binding.
+      const serviceBinder = (controller: PenController) => [ service128, service16 ]
+          .forEach(service => this.bindService(service, gattServer, controller));
 
-      controller.OnConnected();
-
-      this.pens.push(controller);
-      this.controller = controller;
-      this.onPenConnected?.(controller);
-
+      this.initializeController(device.id, serviceBinder);
     } catch (err) {
       NLog.error("Bluetooth Device connection error:", err);
     } finally {
@@ -205,17 +200,31 @@ class PenHelper {
     }
   };
 
+  initializeController(id: string, serviceBinder?: ((controller: PenController) => void)): PenController {
+    const controller = new PenController(id);
+
+    serviceBinder?.(controller);
+
+    this.pens.push(controller);
+    this.controller = controller;
+
+    controller.RequestVersion();
+    this.onPenConnected?.(controller);
+
+    return controller;
+  }
+
   async bindService(service: BluetoothService, server: BluetoothRemoteGATTServer, controller: PenController) {
     try {
       const gattService = await server.getPrimaryService(service.uuid);
-      NLog.log("Service binding", gattService);
+      NLog.debug("Service binding", gattService);
 
       const notificationCharacteristic = await gattService.getCharacteristic(service.notificationCharacteristicUuid);
       const writingCharacteristic = await gattService.getCharacteristic(service.writeCharacteristicUuid);
 
       await this.characteristicBinding(notificationCharacteristic, writingCharacteristic, controller);
 
-      NLog.log("Service ", service.uuid, " has been successfully bound.");
+      NLog.debug("Service ", service.uuid, " has been successfully bound.");
     } catch (err) {
       NLog.error("Service ", service.uuid, " is not supported.", err);
     }
@@ -224,23 +233,26 @@ class PenHelper {
   /**
    * Disconnected Callback function
    *
-   * @param {PenController} controller
    * @param {any} event
    */
-  private onDisconnected (controller: PenController, event: any) {
-    NLog.log("device disconnect", controller, event);
-    this.pens = this.pens.filter(pen => pen !== controller);
+  private onDisconnected (event: any) {
+    NLog.debug("Device disconnect", this.controller, event);
 
-    controller.OnDisconnected();
+    this.pens = this.pens.filter(pen => pen !== this.controller);
+    this.controller.handleDisconnect();
   };
 
   /**
-   * Disconnect Action
-   *
-   * @param {PenController} penController
+   * Disconnect the currently connected controller
    */
-  disconnect(penController: PenController) {
-    penController.device?.gatt?.disconnect();
+  disconnect() {
+    if (!this.device)
+      return console.warn("No Bluetooth device is connected.");
+
+    this.device.gatt?.disconnect();
+
+    // REVIEW: Probably this safety measure is not necessary.
+    setTimeout(() => { this.controller = null; }, 3000);
   };
 }
 
