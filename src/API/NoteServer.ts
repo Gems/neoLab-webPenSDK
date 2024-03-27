@@ -1,10 +1,11 @@
-import {PageInfo} from "../Util/type";
+import {PageInfo, PaperSize} from "../Util/type";
 import {initializeApp} from "firebase/app";
 import * as NLog from "../Util/NLog";
 
 import {getDownloadURL, getStorage, ref} from "firebase/storage";
-import JSZip from "jszip";
+import JSZip, {JSZipObject} from "jszip";
 import PUIController from "./PUIController";
+import { buildBookId, fromMap } from "../Util/utils";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAY7MrI37TvkDerHsShcvOsueDpi4TGihw",
@@ -21,15 +22,14 @@ const fbApp = initializeApp(firebaseConfig);
 const storage = getStorage(fbApp);
 
 // Ncode Formula
+const DPI = window.devicePixelRatio * 96;
 const NCODE_SIZE_IN_INCH = (8 * 7) / 600;
-const POINT_72DPI_SIZE_IN_INCH = 1 / 72;
+const POINT_DPI_SIZE_IN_INCH = 1 / DPI;
+const POINT_DPI_RATIO = NCODE_SIZE_IN_INCH / POINT_DPI_SIZE_IN_INCH;
 
-const point72ToNcode = (p: number) => {
-  const ratio = NCODE_SIZE_IN_INCH / POINT_72DPI_SIZE_IN_INCH;
-  return p / ratio;
-};
+const pointToNcode = (point: number) => point / POINT_DPI_RATIO;
 
-const getNprojUrl = async (pageInfo: PageInfo) => {
+const getNprojUrl = async (pageInfo: PageInfo): Promise<string> => {
   try {
     const pageUrl = `nproj/${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.nproj`;
     console.debug("Downloading URL for: " + pageUrl);
@@ -54,102 +54,115 @@ const setNprojInPuiController = async (url: string | null, pageInfo: PageInfo) =
   await PUIController.getInstance().fetchOnlyPageSymbols(nprojUrl, pageInfo);
 };
 
-/**
- * Calculate page margin info
- * -> define X(min/max), Y(min,max)
- */
-const extractMarginInfo = async (url: string | null, pageInfo: PageInfo) => {
-  const page = pageInfo.page;
-  const nprojUrl = url ?? await getNprojUrl(pageInfo);
+const NprojCache = new Map<string, Map<number, PaperSize>>();
 
-  NLog.debug("[NoteServer] Get the page margin from the following url => " + nprojUrl);
+const fetchNproj = async (nprojUrl: string): Promise<Map<number, PaperSize>> => {
+  NLog.debug("[NoteServer] Get NProj via the following url: " + nprojUrl);
 
   try {
-    const res = await fetch(nprojUrl);
-    const nprojXml = await res.text();
+    const nprojXml = await fetch(nprojUrl).then(res => res.text());
     const parser = new DOMParser();
     const doc = parser.parseFromString(nprojXml, "text/xml");
 
-    const section = doc.children[0].getElementsByTagName("section")[0]?.innerHTML;
-    const owner = doc.children[0].getElementsByTagName("owner")[0]?.innerHTML;
-    const book = doc.children[0].getElementsByTagName("code")[0]?.innerHTML;
+    const getDocTagElements = (tagName: string): HTMLCollectionOf<Element> =>
+        doc.children[0].getElementsByTagName(tagName);
+    const getDocTagValue = (tagName: string): string => getDocTagElements(tagName)[0]?.innerHTML;
 
-    let startPage = doc.children[0].getElementsByTagName("start_page")[0]?.innerHTML;
-    const segment_info = doc.children[0].getElementsByTagName("segment_info")
+    // const section = getDocTagValue("section");
+    // const owner = getDocTagValue("owner");
+    // const book = getDocTagValue("code");
 
-    if (segment_info)
-      startPage = segment_info[0].getAttribute("ncode_start_page");
+    const startPage = parseInt(
+        getDocTagElements("segment_info")[0]?.getAttribute("ncode_start_page") ?? getDocTagValue("start_page"));
 
-    const page_item = doc.children[0].getElementsByTagName("page_item")[page - parseInt(startPage)];
+    const pageSizes = new Map<number, PaperSize>();
+    const pageItems = getDocTagElements("page_item");
+    const totalPages = pageItems.length;
 
-    if (page_item === undefined)
-      throw new Error("Page item is undefined");
+    for (let i = startPage; i < totalPages; i++) {
+      const pageItem = pageItems[i];
+      const x1 = parseInt(pageItem.getAttribute("x1"));
+      const x2 = parseInt(pageItem.getAttribute("x2"));
+      const y1 = parseInt(pageItem.getAttribute("y1"));
+      const y2 = parseInt(pageItem.getAttribute("y2"));
 
-    NLog.debug(`Target SOBP: ${section}(section) ${owner}(owner) ${book}(book) ${page}(page)`);
+      const margins = pageItem.getAttribute("crop_margin")?.split(",");
 
-    let x1, x2, y1, y2, crop_margin, l, t, r, b;
+      const marginLeft = parseFloat(margins[0]);
+      const marginTop = parseFloat(margins[1]);
+      const marginRight = parseFloat(margins[2]);
+      const marginBottom = parseFloat(margins[3]);
 
-    x1 = parseInt(page_item.getAttribute("x1"));
-    x2 = parseInt(page_item.getAttribute("x2"));
-    y1 = parseInt(page_item.getAttribute("y1"));
-    y2 = parseInt(page_item.getAttribute("y2"));
+      const Xmin = pointToNcode(x1) + pointToNcode(marginLeft);
+      const Ymin = pointToNcode(y1) + pointToNcode(marginTop);
+      const Xmax = pointToNcode(x2) - pointToNcode(marginRight);
+      const Ymax = pointToNcode(y2) - pointToNcode(marginBottom);
 
-    crop_margin = page_item.getAttribute("crop_margin");
-    const margins = crop_margin.split(",");
-    l = parseFloat(margins[0]);
-    t = parseFloat(margins[1]);
-    r = parseFloat(margins[2]);
-    b = parseFloat(margins[3]);
+      pageSizes.set(startPage - i, {Xmin, Xmax, Ymin, Ymax} as PaperSize);
+    }
 
-    const Xmin = point72ToNcode(x1) + point72ToNcode(l);
-    const Ymin = point72ToNcode(y1) + point72ToNcode(t);
-    const Xmax = point72ToNcode(x2) - point72ToNcode(r);
-    const Ymax = point72ToNcode(y2) - point72ToNcode(b);
-
-    return { Xmin, Xmax, Ymin, Ymax };
+    return pageSizes;
   } catch (err) {
     NLog.error(err);
     throw err;
   }
 };
 
+/**
+ * Calculate page margin info
+ * -> define X(min/max), Y(min,max)
+ */
+const extractMarginInfo = async (pageInfo: PageInfo): Promise<PaperSize> => {
+  const bookId = buildBookId(pageInfo);
+  const page = pageInfo.page;
+  const pagesSizes = await fromMap(
+      NprojCache, bookId, () => getNprojUrl(pageInfo).then(fetchNproj));
+
+  return pagesSizes.get(page);
+};
+
+const BookPages = new Map<string, Map<number, string>>();
+
+const pageFileNamePattern = /(\d+)_(\d+)_(\d+)_(\d+)\.jpg/;
+
+type NotePages = Map<number, string>;
+
+const downloadNotePages = async (bookId: String): Promise<NotePages> => {
+  const zipUrl = `png/${bookId}.zip`;
+  const jszip: JSZip = new JSZip();
+
+  NLog.debug("Downloading URL for: " + zipUrl);
+
+  const downloadUrl = await getDownloadURL(ref(storage, zipUrl));
+
+  NLog.debug("Zip download URL: " + downloadUrl);
+  const res = await fetch(downloadUrl);
+  const zipBlob = await res.blob();
+  const zipData: JSZip = await jszip.loadAsync(zipBlob);
+
+  return await Object
+      .values(zipData.files)
+      .reduce(async (pagesPromise: Promise<NotePages>, file: JSZipObject): Promise<any> => {
+        const matches = file.name.match(pageFileNamePattern);
+        const page: number | undefined = matches && parseInt(matches[4]) || undefined;
+        const pages = await pagesPromise;
+
+        if (page !== undefined)
+          pages.set(page, await file.async("blob").then(URL.createObjectURL));
+
+        return pages;
+      }, Promise.resolve(new Map<number, string>()));
+};
 
 /**
  * GET note image function
  */
 const getNoteImage = async (pageInfo: PageInfo): Promise<string> => {
-  const zipUrl = `png/${pageInfo.section}_${pageInfo.owner}_${pageInfo.book}.zip`;
-  const page = pageInfo.page;
+  const { section, owner, book, page } = pageInfo;
+  const pages =  await fromMap(
+      BookPages, `${section}_${owner}_${book}` as String, downloadNotePages);
 
-  const jszip = new JSZip();
-
-  console.debug("Downloading URL for: " + zipUrl);
-
-  return await getDownloadURL(ref(storage, zipUrl))
-      .then(async (url) => {
-        console.debug("Zip URL: " + url);
-        const zipBlob = await fetch(url).then((res) => res.blob());
-
-        return await jszip
-            .loadAsync(zipBlob)
-            .then(async function (zip) {
-              const pages = Object.values(zip.files)
-                  .reduce((o: any, file) => {
-                    const found = file.name.match(/(\d+)_(\d+)_(\d+)_(\d+)\.jpg/);
-                    const pageNum = found[4];
-
-                    o[pageNum] = file;
-
-                    return o;
-                  }, {});
-
-              const pageFile = pages[page] ?? Object.values(pages)[0];
-
-              !pages[page] && console.warn(`Page '${page}' not found, using first page instead`);
-
-              return await pageFile.async("blob").then(URL.createObjectURL);
-            });
-      });
+  return pages.get(page) ?? pages.get(0);
 };
 
 const api = {

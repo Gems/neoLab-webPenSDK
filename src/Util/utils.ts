@@ -1,5 +1,21 @@
 import {Dot, ScreenDot, ScreenMode, PageInfo, PaperSize, View } from "./type";
 
+export async function fromMap<K,V>(map: Map<K,V>, key: K, supplier: (key: K) => Promise<V>): Promise<V> {
+  if (!map.has(key))
+    map.set(key, await supplier(key));
+
+  return map.get(key);
+}
+
+export async function safeOp<T>(fn: () => Promise<T>): Promise<T | null> {
+  try {
+    return await fn();
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
 /**
  * Create a PageInfo object with the given parameters.
  *
@@ -9,21 +25,23 @@ import {Dot, ScreenDot, ScreenMode, PageInfo, PaperSize, View } from "./type";
  * @param {number} page
  * @returns {PageInfo}
  */
-export const pageInfo = (section: number, owner: number, book: number, page: number): PageInfo => {
-    return { section, owner, book, page };
-}
+export const pageInfo = (section: number, owner: number, book: number, page: number): PageInfo =>
+    ({ section, owner, book, page });
 
 export function buildPageId(pageInfo: PageInfo, separator: string = "."): string {
-  if (!pageInfo)
-    return "";
+  if (isInvalidPage(pageInfo))
+    return undefined;
 
   const { section, owner, book, page } = pageInfo;
-  const pagePart = page !== undefined ? `${separator}${page}` : "";
-  const bookPart = book !== undefined ? `${separator}${book}` : "";
-  const ownerPart = owner !== undefined ? `${separator}${owner}` : "";
-  const sectionPart = section !== undefined ? `${section}` : "";
+  return [ section, owner, book, page ].join(separator);
+}
 
-  return `${sectionPart}${ownerPart}${bookPart}${pagePart}`;
+export function buildBookId(pageInfo: PageInfo, separator: string = "."): string {
+  if (isInvalidPage(pageInfo))
+    return undefined;
+
+  const { section, owner, book } = pageInfo;
+  return [ section, owner, book ].join(separator);
 }
 
 /**
@@ -40,6 +58,17 @@ export const isSamePage = (page1: PageInfo, page2: PageInfo): boolean => {
                            && page1.book === page2.book
                            && page1.page === page2.page);
 };
+
+export const InvalidPageInfo = {
+  section: -1,
+  owner: -1,
+  book: -1,
+  page: -1,
+};
+
+export const isInvalidPage = (pageInfo?: PageInfo | null): boolean =>
+                                                          // pageInfo.section === 0 -> abnormal pageInfo
+    !pageInfo || isSamePage(pageInfo, InvalidPageInfo) || pageInfo.section === 0;
 
 /**
  * Logic to confirm whether the corresponding page info is a plate paper or not.
@@ -92,7 +121,7 @@ export const ncodeToScreen = (dot: Dot, view: View, paperSize: PaperSize): Scree
  */
 export const ncodeToSmartPlateScreen = (dot: Dot, view: View, angle: number, paperSize: PaperSize): ScreenDot => {
   const plateMode = angle === 90 || angle === 270 ? ScreenMode.PORTRAIT : ScreenMode.LANDSCAPE;
-  const xDiff = paperSize.Xmax - paperSize.Xmin;;
+  const xDiff = paperSize.Xmax - paperSize.Xmin;
   const yDiff = paperSize.Ymax - paperSize.Ymin;
 
   // When plateMode is portrait, swap the width and height values of Ncode

@@ -26,7 +26,7 @@ class PenHelper {
   pens: PenController[];
   controller: PenController;
   device: any;
-  connectingQueue: string[];
+  connectingQueue: Map<string, Promise<boolean>>;
   page: PageInfo;
   dotStorage: { [key: string]: Dot[] };
   isPlate: boolean;
@@ -37,7 +37,7 @@ class PenHelper {
 
   constructor() {
     this.pens = []; // PenController Array
-    this.connectingQueue = []; // device.id array
+    this.connectingQueue = new Map<string, Promise<boolean>>(); // device.id as keys
     this.dotStorage = {};
     this.isPlate = false;
     this.plateMode = "";
@@ -46,13 +46,14 @@ class PenHelper {
   }
 
   /**
-   * Bluetooth의 Characteristics 상태 정보를 binding 하기 위한 로직
+   * Logic for binding the state information of Bluetooth Characteristics
    */
   private async characteristicBinding(
       read: BluetoothRemoteGATTCharacteristic,
       write: BluetoothRemoteGATTCharacteristic,
       controller: PenController) {
 
+    // noinspection SpellCheckingInspection
     read.oncharacteristicvaluechanged = (event: any) => {
       const value = event.target.value;
       const buffer: ByteUtil = new ByteUtil();
@@ -85,16 +86,17 @@ class PenHelper {
     return this.writeCharacteristic;
   }
 
-  private isConnectedOrConnecting = (device: BluetoothDevice) => {
-    return this.pens.some((pen) => pen.id === device.id) || this.connectingQueue.includes(device.id);
+  private isConnectedOrConnecting = (device: BluetoothDevice): Promise<boolean> | undefined => {
+    const isPenConnected = this.pens.some((pen) => pen.id === device.id);
+    return isPenConnected && Promise.resolve(true) || this.connectingQueue.get(device.id);
   };
 
-  private addDeviceToConnectingQueue = (device: BluetoothDevice) => {
-    this.connectingQueue.push(device.id);
+  private addDeviceToConnectingQueue = (device: BluetoothDevice, promise: Promise<boolean>) => {
+    this.connectingQueue.set(device.id, promise);
   };
 
   private removeDeviceFromConnectingQueue = (device: BluetoothDevice) => {
-    this.connectingQueue = this.connectingQueue.filter(id => id !== device.id);
+    this.connectingQueue.delete(device.id);
   };
 
   debugMode = (bool: boolean) => {
@@ -133,9 +135,9 @@ class PenHelper {
    *
    * @returns {boolean}
    */
-  async scanPen() {
+  async scanPen(): Promise<boolean> {
     if (!await this.isSupportedBLE())
-      return;
+      return false
 
     const options: RequestDeviceOptions = {
       filters:  [ { services: [ service16.uuid ] }, { services: [ service128.uuid ] } ],
@@ -154,6 +156,8 @@ class PenHelper {
     } catch (err) {
       NLog.log("err", err);
     }
+
+    return false;
   }
 
   async isSupportedBLE() {
@@ -161,7 +165,6 @@ class PenHelper {
 
     if (!isEnabledBle) {
       const message = "Bluetooth is not supported.";
-      alert(message);
       NLog.log(message);
     }
 
@@ -171,16 +174,29 @@ class PenHelper {
   /**
    * Logic to set up the connection of a Bluetooth device.
    */
-  async connectDevice(device: BluetoothDevice) {
+  async connectDevice(device: BluetoothDevice): Promise<boolean> {
     if (!device)
-      return;
+      return false;
 
-    if (this.isConnectedOrConnecting(device))
-      return NLog.log("Bluetooth Device is already connecting or connected.");
+    const isConnectedOrConnecting= this.isConnectedOrConnecting(device);
+
+    if (isConnectedOrConnecting !== undefined) {
+      NLog.log("Bluetooth Device is already connecting or connected.");
+      return isConnectedOrConnecting;
+    }
 
     NLog.log("Connect start", device);
+
+    let deferredResolve: (value: boolean) => void;
+    let deferredReject: (reason?: any) => void;
+
+    const deferred = new Promise<boolean>((resolve, reject) => {
+      deferredResolve = resolve;
+      deferredReject = reject;
+    });
+
     try {
-      this.addDeviceToConnectingQueue(device);
+      this.addDeviceToConnectingQueue(device, deferred);
 
       const gattServer = (await device.gatt?.connect()) as BluetoothRemoteGATTServer;
       NLog.log("GATT Server", gattServer);
@@ -193,11 +209,16 @@ class PenHelper {
           .forEach(service => this.bindService(service, gattServer, controller));
 
       this.initializeController(device.id, serviceBinder);
+
+      deferredResolve(true);
     } catch (err) {
       NLog.error("Bluetooth Device connection error:", err);
+      deferredReject?.(err);
     } finally {
       this.removeDeviceFromConnectingQueue(device);
     }
+
+    return deferred;
   };
 
   initializeController(id: string, serviceBinder?: ((controller: PenController) => void)): PenController {
@@ -210,6 +231,8 @@ class PenHelper {
 
     controller.RequestVersion();
     this.onPenConnected?.(controller);
+
+    this.debugMode(false);
 
     return controller;
   }
