@@ -151,7 +151,7 @@ class PenHelper {
       NLog.log("> Connected:        " + device.gatt?.connected);
       NLog.log("> SDKVersion:       " + SDKversion);
 
-      await this.connectDevice(device);
+      return this.connectDevice(device);
 
     } catch (err) {
       NLog.log("err", err);
