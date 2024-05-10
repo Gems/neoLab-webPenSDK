@@ -242,7 +242,7 @@ export default class PenClientParserV2 {
       case CMD.VERSION_RESPONSE:
         const versionInfo = Res.versionInfo(packet);
 
-        NLog.log("ParsePacket Version Info", versionInfo);
+        NLog.debug("ParsePacket Version Info", versionInfo);
         this.isUploading = false;
         this.penController.handleConnection(versionInfo);
         break;
@@ -963,7 +963,7 @@ export default class PenClientParserV2 {
    * @param {array} buff - Uint8Array
    */
   ProtocolParse(buff: Uint8Array) {
-    NLog.log("Parsing Process Start", buff);
+    NLog.debug("Parsing Process Start", buff);
 
     const size = buff.length;
     for (let i = 0; i < size; i++) {
