@@ -230,7 +230,7 @@ export default class PenClientParserV2 {
   ParsePacket(packet: Packet) {
     const cmd = packet.Cmd;
     // @ts-ignore
-    NLog.log("ParsePacket", cmd, "0x" + cmd.toString(16), " - ", packetCommands["" + cmd] || "Unknown");
+    NLog.debug("ParsePacket", cmd, "0x" + cmd.toString(16), " - ", packetCommands["" + cmd] || "Unknown");
     NLog.debug("ParsePacket", packet.Data);
 
     if (packet.Result > 0) {
@@ -698,11 +698,15 @@ export default class PenClientParserV2 {
       this.CheckEventCount(eventCount);
     }
 
-    this.paper.owner = Converter.byteArrayToInt(
+    const owner = Converter.byteArrayToInt(
         new Uint8Array(Array.from(packet.GetBytes(3)).concat(0x00)));
-    this.paper.section = packet.GetByte() & 0xff;
-    this.paper.book = packet.GetInt();
-    this.paper.page = packet.GetInt();
+    const section = packet.GetByte() & 0xff;
+    const book = packet.GetInt();
+    const page = packet.GetInt();
+
+    const info = { section, owner, book, page };
+
+    Object.assign(this.paper, info);
 
     this.state.dotCount = 0;
     this.state.isStartWithPaperInfo = true;
@@ -728,7 +732,7 @@ export default class PenClientParserV2 {
     // );
     // this.ProcessDot(downDot);
 
-    this.penController.handlePageInfo(this.paper);
+    this.penController.handlePageInfo(info);
   }
 
   /**
@@ -1065,6 +1069,9 @@ export default class PenClientParserV2 {
     dot.dotType === DotTypes.PEN_HOVER || dot.dotType === DotTypes.PEN_INFO || dot.dotType === DotTypes.PEN_ERROR
         ? this.SendDotReceiveEvent(dot)
         : this.strokeHandler.handleDot(dot);
+
+    //   if (dot.dotType !== DotTypes.PEN_ERROR)
+    //     // Should we continue stroke here? (this is suggested by the client code from the reference library (PenBasic)
   }
 
   /**

@@ -6,6 +6,9 @@ export type PageInfo = {
 };
 
 export type PaperSize = {
+  margin: number[],
+  width: number;
+  height: number;
   Xmin: number;
   Xmax: number;
   Ymin: number;

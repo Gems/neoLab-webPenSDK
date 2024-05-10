@@ -51,7 +51,7 @@ export function buildBookId(pageInfo: PageInfo, separator: string = "."): string
  * @param {PageInfo} page2
  * @returns {boolean}
  */
-export const isSamePage = (page1: PageInfo, page2: PageInfo): boolean => {
+export const isSamePage = (page1: PageInfo | undefined, page2: PageInfo | undefined): boolean => {
   return page1 === page2
       || (!page1 && !page2 && page1.section === page2.section
                            && page1.owner === page2.owner

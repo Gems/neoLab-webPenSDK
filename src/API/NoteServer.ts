@@ -81,24 +81,24 @@ const fetchNproj = async (nprojUrl: string): Promise<Map<number, PaperSize>> => 
 
     for (let i = startPage; i < totalPages; i++) {
       const pageItem = pageItems[i];
-      const x1 = parseInt(pageItem.getAttribute("x1"));
-      const x2 = parseInt(pageItem.getAttribute("x2"));
-      const y1 = parseInt(pageItem.getAttribute("y1"));
-      const y2 = parseInt(pageItem.getAttribute("y2"));
+      const xLeft = pointToNcode(parseInt(pageItem.getAttribute("x1")));
+      const xRight = pointToNcode(parseInt(pageItem.getAttribute("x2")));
+      const yTop = pointToNcode(parseInt(pageItem.getAttribute("y1")));
+      const yBottom = pointToNcode(parseInt(pageItem.getAttribute("y2")));
 
-      const margins = pageItem.getAttribute("crop_margin")?.split(",");
+      const margin = pageItem
+          .getAttribute("crop_margin")
+          ?.split(",")
+          ?.map(_ => pointToNcode(parseFloat(_)));
 
-      const marginLeft = parseFloat(margins[0]);
-      const marginTop = parseFloat(margins[1]);
-      const marginRight = parseFloat(margins[2]);
-      const marginBottom = parseFloat(margins[3]);
+      const [ marginLeft, marginTop, marginRight, marginBottom ] = margin;
 
-      const Xmin = pointToNcode(x1) + pointToNcode(marginLeft);
-      const Ymin = pointToNcode(y1) + pointToNcode(marginTop);
-      const Xmax = pointToNcode(x2) - pointToNcode(marginRight);
-      const Ymax = pointToNcode(y2) - pointToNcode(marginBottom);
+      const Xmin = xLeft + marginLeft;
+      const Ymin = yTop + marginTop;
+      const Xmax = xRight - marginRight;
+      const Ymax = yBottom - marginBottom;
 
-      pageSizes.set(startPage - i, {Xmin, Xmax, Ymin, Ymax} as PaperSize);
+      pageSizes.set(i - startPage, { Xmin, Xmax, Ymin, Ymax, width: xRight, height: yBottom, margin } as PaperSize);
     }
 
     return pageSizes;
