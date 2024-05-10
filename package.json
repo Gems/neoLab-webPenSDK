@@ -15,6 +15,7 @@
     "start": "node examples/server.js",
     "build:webpack": "rm -rf dist && webpack",
     "build": "rm -rf dist && tsc && npm run convertNPROJ && cp -r ./src/API/nproj ./dist/API/nproj",
+    "watch": "tsc -w",
     "test": "jest",
     "clean": "rm -rf dist & rm -rf node_modules & rm package-lock.json & rm yarn.lock",
     "prepare": "yarn build",

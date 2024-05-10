@@ -1,19 +1,19 @@
 let isDebugEnabled = true;
 
-function log(...arg: any) {
-  console.log(...arg);
+function log(...data: any[]) {
+  console.log(...data);
 }
 
-function debug(...arg: any) {
-  if (isDebugEnabled) console.log(...arg);
+function debug(...data: any[]) {
+  isDebugEnabled && console.debug(...data);
 }
 
-function error(...arg: any) {
-  console.error(...arg);
+function error(...data: any[]) {
+  console.error(...data);
 }
 
-function setDebug(bool: boolean) {
-  isDebugEnabled = bool;
+function setDebug(isEnabled: boolean) {
+  isDebugEnabled = isEnabled;
 }
 
 export { log, error, debug, setDebug };

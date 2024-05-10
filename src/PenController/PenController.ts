@@ -295,7 +295,7 @@ export default class PenController {
    * @param {boolean} isCompressed
    */
   RequestFirmwareInstallation(file: File, version: string, isCompressed: boolean) {
-    this.clientCaller.ReqPenSwUpgrade(file, version, isCompressed);
+    return this.clientCaller.ReqPenSwUpgrade(file, version, isCompressed);
   }
 
   /**
@@ -305,7 +305,7 @@ export default class PenController {
    * @param {number} status
    */
   RequestFirmwareUpload(offset: number, data: Uint8Array, status: number) {
-    this.clientCaller.ReqPenSwUpload(offset, data, status);
+    return this.clientCaller.ReqPenSwUpload(offset, data, status);
   }
 
   /**

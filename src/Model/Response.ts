@@ -88,9 +88,7 @@ export function penConfigurationInfo(packet: Packet) {
  */
 export function SettingChange(packet: Packet): { settingType: number; result: boolean; } {
   const settingType = packet.GetByte();
-  // REVIEW: The logic was reversed from the original code. Is this correct?
-  //         It was: const result = packet.GetByte() === 0;
-  const result = packet.GetByte() !== 0;
+  const result = packet.GetByte() === 0;
 
   return { settingType, result };
 }
