@@ -1,8 +1,9 @@
 import PenController from "./PenController";
-import {Dot, PageInfo} from "../Util/type";
 import * as NLog from "../Util/NLog";
 import {SDKversion} from "../Util/SDKVersion";
 import ByteUtil from "../Util/ByteUtil";
+import WatchAdvertisementController from "../Util/WatchAdvertisementController";
+import {buildDeviceHash, DeviceDescription, getStoredPens, storePen} from "../Util/PenStorage";
 
 interface BluetoothService {
   uuid: number | string;
@@ -23,27 +24,226 @@ const service128: BluetoothService = {
 };
 
 class PenHelper {
-  pens: PenController[];
+  private readonly pens: Set<PenController> = new Set();
+  private watchDevicesAbortController: AbortController | null = null;
+
   controller: PenController;
-  device: any;
-  connectingQueue: Map<string, Promise<boolean>>;
-  page: PageInfo;
-  dotStorage: { [key: string]: Dot[] };
-  isPlate: boolean;
-  plateMode: string;
-  writeCharacteristic: boolean;
+  device: BluetoothDevice;
 
   onPenConnected: (pen: PenController) => void;
-
-  constructor() {
-    this.pens = []; // PenController Array
-    this.connectingQueue = new Map<string, Promise<boolean>>(); // device.id as keys
-    this.dotStorage = {};
-    this.isPlate = false;
-    this.plateMode = "";
-    this.page = { section: 0, owner: 0, book: 0, page: 0 }; // PageInfo
-    this.writeCharacteristic = false;
+  onSearchingChanged: (isSearching: boolean) => void;
+  
+  isSearching(): boolean {
+    return !!this.watchDevicesAbortController;
   }
+
+  isConnected(): boolean {
+    return this.device?.gatt?.connected;
+  }
+
+  debugMode = (bool: boolean) => {
+    NLog.setDebug(bool);
+  };
+
+  async isSupportedBLE() {
+    const isEnabledBle= navigator.bluetooth && await navigator.bluetooth.getAvailability();
+
+    if (!isEnabledBle) {
+      const message = "Bluetooth is not supported.";
+      NLog.error(message);
+    }
+
+    return isEnabledBle;
+  };
+
+  private async getPairedPens(): Promise<BluetoothDevice[]> {
+    if (!navigator.bluetooth?.getDevices || !await this.isSupportedBLE())
+      return [];
+
+    const stored = new Set(getStoredPens().map(buildDeviceHash));
+    const pairedDevices = await navigator.bluetooth.getDevices();
+
+    return pairedDevices
+        .filter(device => stored.has(buildDeviceHash(device)));
+  }
+
+  async startScan(): Promise<DeviceDescription[]> {
+    if (this.isConnected() || this.isSearching())
+      return [];
+
+    this.initAbortController();
+
+    const pairedDevices = await this.getPairedPens();
+
+    pairedDevices.forEach(device => this.watchAdvertisements(device));
+
+    return pairedDevices.map(device => ({ id: device.id, name: device.name}));
+  }
+
+  private initAbortController() {
+    this.watchDevicesAbortController = new AbortController();
+
+    this.watchDevicesAbortController.signal.addEventListener("abort", () => {
+      this.watchDevicesAbortController = null;
+      this.updateSearching()
+    });
+
+    this.updateSearching();
+  }
+
+  /**
+   * Logic for scanning Bluetooth devices for pen connection
+   *
+   * @returns {boolean}
+   */
+  async pairPen(): Promise<void> {
+    if (!await this.isSupportedBLE())
+      return;
+
+    const options: RequestDeviceOptions = {
+      filters:  [ { services: [ service16.uuid ] }, { services: [ service128.uuid ] } ],
+    };
+
+    try {
+      const device = await navigator.bluetooth.requestDevice(options);
+
+      NLog.debug("> Name:             " + device.name);
+      NLog.debug("> Id:               " + device.id);
+      NLog.debug("> Connected:        " + device.gatt?.connected);
+      NLog.debug("> SDKVersion:       " + SDKversion);
+
+      await this.connectDevice(device);
+    } catch (err) {
+      NLog.error("err", err);
+      throw err;
+    }
+  }
+
+  private registerWatchingDevice(device: BluetoothDevice): WatchAdvertisementController {
+    if (!this.watchDevicesAbortController)
+      throw new Error("Can't watch advertisements: AbortController is not initialized.");
+
+    return new WatchAdvertisementController(device, this.watchDevicesAbortController);
+  }
+
+  private stopWatchingAllDevices() {
+    NLog.debug("Stopping watching all devices...");
+    this.watchDevicesAbortController?.abort();
+  }
+
+  private updateSearching() {
+    this.onSearchingChanged?.(this.isSearching());
+  }
+
+  private connectingPromise: Promise<void>;
+
+  /**
+   * Logic to set up the connection of a Bluetooth device.
+   */
+  private async watchAdvertisements(device: BluetoothDevice): Promise<void> {
+    if (!device || this.isConnected())
+      return;
+
+    const watchAdvertisement = this.registerWatchingDevice(device);
+
+    if (watchAdvertisement.isWatching())
+      return;
+
+    const self = this;
+
+    // noinspection SpellCheckingInspection
+    device.onadvertisementreceived = async () => {
+      NLog.debug("> Received advertisement from " + buildDeviceHash(device));
+
+      await self.connectDevice(device);
+    }
+
+    try {
+      NLog.debug('Watching advertisements from "' + buildDeviceHash(device) + '"...');
+      await watchAdvertisement.startWatching();
+    }
+    catch(error) {
+      NLog.error("Couldn't start watching advertisements for Bluetooth Device " + buildDeviceHash(device) + ":", error);
+      watchAdvertisement.stopWatching();
+    }
+  };
+
+  private async connectDevice(device: BluetoothDevice, reportOnError: boolean = true): Promise<boolean> {
+    while (this.connectingPromise)
+      await this.connectingPromise;
+
+    if (this.isConnected())
+      return true;
+
+    let deferredResolve: () => void;
+    this.connectingPromise = new Promise(resolve => deferredResolve = resolve);
+
+    try {
+      NLog.debug("Connecting to GATT Server..." + buildDeviceHash(device));
+      const gattServer: BluetoothRemoteGATTServer = await device.gatt?.connect();
+      NLog.debug('> Bluetooth device "' + buildDeviceHash(device) + ' connected.');
+
+      this.device = device;
+      device.ongattserverdisconnected = this.onDisconnected.bind(this);
+
+      await this.initializeController(gattServer);
+
+      // Stop watching advertisements to conserve battery life. Relevant for Mobile devices.
+      this.stopWatchingAllDevices();
+    }
+    catch(error) {
+      reportOnError
+          ? NLog.error("Bluetooth Device connection error: ", error)
+          : NLog.debug("Bluetooth Device couldn't connect: ", device)
+    }
+    finally {
+      this.connectingPromise = null;
+      deferredResolve();
+    }
+
+    return this.isConnected();
+  }
+
+  private async initializeController(gattServer: BluetoothRemoteGATTServer): Promise<void> {
+    const controller = new PenController(this.device.id);
+    const services = [ service128, service16 ];
+
+    for (let i = 0; i < services.length; i++)
+      if (await this.bindService(services[i], gattServer, controller))
+        break;
+
+    if (!this.isConnected())
+      throw new Error("Couldn't bind any GATT service to the bluetooth device.");
+
+    this.pens.add(controller);
+    this.controller = controller;
+
+    storePen(this.device);
+
+    controller.RequestVersion();
+    this.onPenConnected?.(controller);
+
+    //this.debugMode(false);
+  }
+
+  private async bindService(service: BluetoothService, server: BluetoothRemoteGATTServer, controller: PenController): Promise<boolean> {
+    try {
+      const gattService = await server.getPrimaryService(service.uuid);
+      NLog.debug("Service binding", gattService);
+
+      const notificationCharacteristic = await gattService.getCharacteristic(service.notificationCharacteristicUuid);
+      const writingCharacteristic = await gattService.getCharacteristic(service.writeCharacteristicUuid);
+      const gattCharacteristic = await this.characteristicBinding(notificationCharacteristic, writingCharacteristic, controller);
+
+      NLog.debug("Service ", service.uuid, " has been successfully bound.");
+
+      return server.connected && !!gattCharacteristic;
+    } catch (err) {
+      NLog.error("Service ", service.uuid, " is not supported.", err);
+
+      return false;
+    }
+  };
 
   /**
    * Logic for binding the state information of Bluetooth Characteristics
@@ -51,7 +251,7 @@ class PenHelper {
   private async characteristicBinding(
       read: BluetoothRemoteGATTCharacteristic,
       write: BluetoothRemoteGATTCharacteristic,
-      controller: PenController) {
+      controller: PenController): Promise<BluetoothRemoteGATTCharacteristic> {
 
     // noinspection SpellCheckingInspection
     read.oncharacteristicvaluechanged = (event: any) => {
@@ -66,191 +266,17 @@ class PenHelper {
 
     // Write Set
     controller.setWriter((data: Uint8Array) => write
-      .writeValue(data)
-      .then(() => NLog.log("write success CMD: ", "0x" + data[1].toString(16), data[1]))
-      .catch((err: any) => {
-        NLog.error("write Error", err);
+        .writeValue(data)
+        .then(() => NLog.debug("Write success CMD: ", "0x" + data[1].toString(16), data[1]))
+        .catch((err: any) => {
+          NLog.error("Write Error", err);
 
-        if (err instanceof DOMException)
-          setTimeout(() => write.writeValue(data), 500);
-      }));
+          if (err instanceof DOMException)
+            setTimeout(() => write.writeValue(data), 500);
+        }));
 
     // Read Set
-    await read.startNotifications();
-  };
-
-  /**
-   * @returns {boolean}
-   */
-  isConnected() {
-    return this.writeCharacteristic;
-  }
-
-  private isConnectedOrConnecting = (device: BluetoothDevice): Promise<boolean> | undefined => {
-    const isPenConnected = this.pens.some((pen) => pen.id === device.id);
-    return isPenConnected && Promise.resolve(true) || this.connectingQueue.get(device.id);
-  };
-
-  private addDeviceToConnectingQueue = (device: BluetoothDevice, promise: Promise<boolean>) => {
-    this.connectingQueue.set(device.id, promise);
-  };
-
-  private removeDeviceFromConnectingQueue = (device: BluetoothDevice) => {
-    this.connectingQueue.delete(device.id);
-  };
-
-  debugMode = (bool: boolean) => {
-    NLog.setDebug(bool);
-  };
-
-  // TODO: Move to PenController and implement there.
-  // /**
-  //  * MARK: Dot Event Callback - callback function for processing dots that arrive through the pen.
-  //  *
-  //  * @param {OnDot} onDot
-  //  * @param {Dot} dot
-  //  */
-  // private handleDot(onDot: OnDot | null, dot: Dot): void {
-  //   const pageId = buildPageId(dot.pageInfo);
-  //   const dotStorage = (this.dotStorage[pageId] ?? (this.dotStorage[pageId] = []));
-  //
-  //   dotStorage.push(dot);
-  //
-  //   // Check if it's a platePage and then set the isPlate value
-  //   this.isPlate = isPlatePaper(dot.pageInfo);
-  //
-  //   // REVIEW: Previously there was a check here, that handled 'page change' only in case of `dot.type === DotTypes.PAGE_DOWN`.
-  //   //         Double-check if it's a correct approach to handle any dot type here.
-  //   if (!isSamePage(dot.pageInfo, this.page)) {
-  //     this.page = dot.pageInfo;
-  //     this.callbacks?.onPage?.(this.page);
-  //     return;
-  //   }
-  //
-  //   onDot!(dot);
-  // };
-
-  /**
-   * Logic for scanning Bluetooth devices for pen connection
-   *
-   * @returns {boolean}
-   */
-  async scanPen(): Promise<boolean> {
-    if (!await this.isSupportedBLE())
-      return false
-
-    const options: RequestDeviceOptions = {
-      filters:  [ { services: [ service16.uuid ] }, { services: [ service128.uuid ] } ],
-    };
-
-    try {
-      const device = await navigator.bluetooth.requestDevice(options);
-
-      NLog.log("> Name:             " + device.name);
-      NLog.log("> Id:               " + device.id);
-      NLog.log("> Connected:        " + device.gatt?.connected);
-      NLog.log("> SDKVersion:       " + SDKversion);
-
-      return this.connectDevice(device);
-
-    } catch (err) {
-      NLog.log("err", err);
-    }
-
-    return false;
-  }
-
-  async isSupportedBLE() {
-    const isEnabledBle= navigator.bluetooth && await navigator.bluetooth.getAvailability();
-
-    if (!isEnabledBle) {
-      const message = "Bluetooth is not supported.";
-      NLog.log(message);
-    }
-
-    return isEnabledBle;
-  };
-
-  /**
-   * Logic to set up the connection of a Bluetooth device.
-   */
-  async connectDevice(device: BluetoothDevice): Promise<boolean> {
-    if (!device)
-      return false;
-
-    const isConnectedOrConnecting= this.isConnectedOrConnecting(device);
-
-    if (isConnectedOrConnecting !== undefined) {
-      NLog.log("Bluetooth Device is already connecting or connected.");
-      return isConnectedOrConnecting;
-    }
-
-    NLog.log("Connect start", device);
-
-    let deferredResolve: (value: boolean) => void;
-    let deferredReject: (reason?: any) => void;
-
-    const deferred = new Promise<boolean>((resolve, reject) => {
-      deferredResolve = resolve;
-      deferredReject = reject;
-    });
-
-    try {
-      this.addDeviceToConnectingQueue(device, deferred);
-
-      const gattServer = (await device.gatt?.connect()) as BluetoothRemoteGATTServer;
-      NLog.log("GATT Server", gattServer);
-
-      this.device = device;
-      device.ongattserverdisconnected = this.onDisconnected.bind(this);
-
-      // REVIEW: Rewrite this part to make it the service binding in sequence and stop on the first successful binding.
-      const serviceBinder = (controller: PenController) => [ service128, service16 ]
-          .forEach(service => this.bindService(service, gattServer, controller));
-
-      this.initializeController(device.id, serviceBinder);
-
-      deferredResolve(true);
-    } catch (err) {
-      NLog.error("Bluetooth Device connection error:", err);
-      deferredReject?.(err);
-    } finally {
-      this.removeDeviceFromConnectingQueue(device);
-    }
-
-    return deferred;
-  };
-
-  initializeController(id: string, serviceBinder?: ((controller: PenController) => void)): PenController {
-    const controller = new PenController(id);
-
-    serviceBinder?.(controller);
-
-    this.pens.push(controller);
-    this.controller = controller;
-
-    controller.RequestVersion();
-    this.onPenConnected?.(controller);
-
-    this.debugMode(false);
-
-    return controller;
-  }
-
-  async bindService(service: BluetoothService, server: BluetoothRemoteGATTServer, controller: PenController) {
-    try {
-      const gattService = await server.getPrimaryService(service.uuid);
-      NLog.debug("Service binding", gattService);
-
-      const notificationCharacteristic = await gattService.getCharacteristic(service.notificationCharacteristicUuid);
-      const writingCharacteristic = await gattService.getCharacteristic(service.writeCharacteristicUuid);
-
-      await this.characteristicBinding(notificationCharacteristic, writingCharacteristic, controller);
-
-      NLog.debug("Service ", service.uuid, " has been successfully bound.");
-    } catch (err) {
-      NLog.error("Service ", service.uuid, " is not supported.", err);
-    }
+    return await read.startNotifications();
   };
 
   /**
@@ -261,8 +287,13 @@ class PenHelper {
   private onDisconnected (event: any) {
     NLog.debug("Device disconnect", this.controller, event);
 
-    this.pens = this.pens.filter(pen => pen !== this.controller);
-    this.controller.handleDisconnect();
+    const controller = this.controller;
+
+    this.device = null;
+    this.controller = null;
+    this.pens.delete(controller);
+
+    controller.handleDisconnect();
   };
 
   /**
@@ -273,9 +304,6 @@ class PenHelper {
       return console.warn("No Bluetooth device is connected.");
 
     this.device.gatt?.disconnect();
-
-    // REVIEW: Probably this safety measure is not necessary.
-    setTimeout(() => { this.controller = null; }, 3000);
   };
 }
 
