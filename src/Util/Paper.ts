@@ -1,5 +1,5 @@
 import { PageInfo, PaperSize } from "./type";
-import {buildPageId, isInvalidPage, safeOp} from "./utils";
+import {buildPageId, isInvalidPage, ncodeToScreen, safeOp} from "./utils";
 import NoteServer from "../API/NoteServer";
 
 export type PaperDetails = {
@@ -37,5 +37,13 @@ export async function fetchPaperDetails(pageInfo: PageInfo, shouldIncludeImageBl
   const imageBlobUrl = shouldIncludeImageBlobUrl ? await safeOp(() => NoteServer.getNoteImage(pageInfo)) ?? "" : "";
   const paperSize = await safeOp(() => NoteServer.extractMarginInfo(pageInfo));
 
-  return paperSize ? { imageBlobUrl, paperSize } : null;
+  const width = ncodeToScreen(paperSize.width);
+  const height = ncodeToScreen(paperSize.height);
+  const Xmin = ncodeToScreen(paperSize.Xmin);
+  const Xmax = ncodeToScreen(paperSize.Xmax);
+  const Ymin = ncodeToScreen(paperSize.Ymin);
+  const Ymax = ncodeToScreen(paperSize.Ymax);
+  const margin = paperSize.margin.map(ncodeToScreen);
+
+  return paperSize ? { imageBlobUrl, paperSize: { width, height, margin, Xmin, Xmax, Ymin, Ymax} } : null;
 }

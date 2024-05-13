@@ -1,4 +1,4 @@
-import {Dot, ScreenDot, ScreenMode, PageInfo, PaperSize, View } from "./type";
+import { PageInfo } from "./type";
 
 export async function fromMap<K,V>(map: Map<K,V>, key: K, supplier: (key: K) => Promise<V>): Promise<V> {
   if (!map.has(key))
@@ -80,76 +80,14 @@ export const isPlatePaper = (pageInfo: PageInfo): boolean => {
   return pageInfo.owner === 1013 && pageInfo.book === 2;
 };
 
-/**
- * Translate the coordinate value to a value that matches the view size of the Canvas using the Ncode dot coordinates.
- * @param {Dot} dot
- * @param {View} view
- * @param {PaperSize} paperSize
- * @returns {ScreenDot}
- */
-export const ncodeToScreen = (dot: Dot, view: View, paperSize: PaperSize): ScreenDot => {
-  let paperBase, paperWidth, paperHeight;
-  paperBase = { Xmin: paperSize.Xmin, Ymin: paperSize.Ymin }; // The margin value of Ncode paper,
-  paperWidth = paperSize.Xmax - paperSize.Xmin; // The width of Ncode paper in pixels.
-  paperHeight = paperSize.Ymax - paperSize.Ymin; // The height of Ncode paper in pixels.
+const DPI = window.devicePixelRatio * 96;
+// Ncode Formula
+const NCODE_SIZE_IN_INCH = (8 * 7) / 600;
+const POINT_72DPI_SIZE_IN_INCH = 1 / 72;
 
-  /**
-   * ncode_size : ncode_dot_position = view_size : view_dot_position
-   * view_dot_position = (ncode_dot_position * view_size) / ncode_size
-   * Therefore, multiply each value of ncode_dot_position by its corresponding width and height ratio to get the final size.
-   *
-   * widthRatio = view.width / paperWidth
-   * heightRatio = view.height / paperHeight
-   */
-
-  const widthRatio = view.width / paperWidth;
-  const heightRatio = view.height / paperHeight;
-  // By subtracting the basic margin values of dot (Xmin and Ymin) from the final size.
-  const x = (dot.x - paperBase.Xmin) * widthRatio;
-  const y = (dot.y - paperBase.Ymin) * heightRatio;
-
-  return { x, y };
+export const point72ToNcode = (point: number) => {
+  const ratio = NCODE_SIZE_IN_INCH / POINT_72DPI_SIZE_IN_INCH;
+  return point / ratio;
 };
 
-/**
- * Translate the coordinates of Ncode dot in SmartPlate to a value that matches the view size of Canvas and angle (degree).
- * @param {Dot} dot
- * @param {View} view
- * @param {number} angle - [0', 180']: landscape, [90', 270']: portrait
- * @param {PaperSize} paperSize
- * @returns {ScreenDot}
- */
-export const ncodeToSmartPlateScreen = (dot: Dot, view: View, angle: number, paperSize: PaperSize): ScreenDot => {
-  const plateMode = angle === 90 || angle === 270 ? ScreenMode.PORTRAIT : ScreenMode.LANDSCAPE;
-  const xDiff = paperSize.Xmax - paperSize.Xmin;
-  const yDiff = paperSize.Ymax - paperSize.Ymin;
-
-  // When plateMode is portrait, swap the width and height values of Ncode
-  const paperWidth = plateMode === ScreenMode.LANDSCAPE ? xDiff : yDiff;
-  const paperHeight = plateMode === ScreenMode.LANDSCAPE ? yDiff : xDiff;
-  const paperBase = { Xmin: paperSize.Xmin, Ymin: paperSize.Ymin };
-
-  let nx = Math.cos((Math.PI / 180) * angle) * dot.x - Math.sin((Math.PI / 180) * angle) * dot.y;
-  let ny = Math.sin((Math.PI / 180) * angle) * dot.x + Math.cos((Math.PI / 180) * angle) * dot.y;
-
-  if (angle === 0) {
-    paperBase.Xmin = 0;
-    paperBase.Ymin = 0;
-  } else if (angle === 90) {
-    paperBase.Ymin = 0;
-    nx += paperSize.Ymax;
-  } else if (angle === 180) {
-    nx += paperSize.Xmax;
-    ny += paperSize.Ymax;
-  } else if (angle === 270) {
-    paperBase.Xmin = 0;
-    ny += paperSize.Xmax;
-  }
-
-  const widthRatio = view.width / paperWidth;
-  const heightRatio = view.height / paperHeight;
-  const x = (nx - paperBase.Xmin) * widthRatio;
-  const y = (ny - paperBase.Ymin) * heightRatio;
-
-  return { x, y };
-};
+export const ncodeToScreen = (ncode: number): number => ncode * NCODE_SIZE_IN_INCH * DPI;

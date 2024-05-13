@@ -5,7 +5,7 @@ import * as NLog from "../Util/NLog";
 import {getDownloadURL, getStorage, ref} from "firebase/storage";
 import JSZip, {JSZipObject} from "jszip";
 import PUIController from "./PUIController";
-import { buildBookId, fromMap } from "../Util/utils";
+import {buildBookId, fromMap, point72ToNcode} from "../Util/utils";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAY7MrI37TvkDerHsShcvOsueDpi4TGihw",
@@ -20,14 +20,6 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const storage = getStorage(fbApp);
-
-// Ncode Formula
-const DPI = window.devicePixelRatio * 96;
-const NCODE_SIZE_IN_INCH = (8 * 7) / 600;
-const POINT_DPI_SIZE_IN_INCH = 1 / DPI;
-const POINT_DPI_RATIO = NCODE_SIZE_IN_INCH / POINT_DPI_SIZE_IN_INCH;
-
-const pointToNcode = (point: number) => point / POINT_DPI_RATIO;
 
 const getNprojUrl = async (pageInfo: PageInfo): Promise<string> => {
   try {
@@ -81,15 +73,15 @@ const fetchNproj = async (nprojUrl: string): Promise<Map<number, PaperSize>> => 
 
     for (let i = startPage; i < totalPages; i++) {
       const pageItem = pageItems[i];
-      const xLeft = pointToNcode(parseInt(pageItem.getAttribute("x1")));
-      const xRight = pointToNcode(parseInt(pageItem.getAttribute("x2")));
-      const yTop = pointToNcode(parseInt(pageItem.getAttribute("y1")));
-      const yBottom = pointToNcode(parseInt(pageItem.getAttribute("y2")));
+      const xLeft = point72ToNcode(parseInt(pageItem.getAttribute("x1")));
+      const xRight = point72ToNcode(parseInt(pageItem.getAttribute("x2")));
+      const yTop = point72ToNcode(parseInt(pageItem.getAttribute("y1")));
+      const yBottom = point72ToNcode(parseInt(pageItem.getAttribute("y2")));
 
       const margin = pageItem
           .getAttribute("crop_margin")
           ?.split(",")
-          ?.map(_ => pointToNcode(parseFloat(_)));
+          ?.map(_ => point72ToNcode(parseFloat(_)));
 
       const [ marginLeft, marginTop, marginRight, marginBottom ] = margin;
 
