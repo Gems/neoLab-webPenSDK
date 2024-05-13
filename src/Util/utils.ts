@@ -53,10 +53,11 @@ export function buildBookId(pageInfo: PageInfo, separator: string = "."): string
  */
 export const isSamePage = (page1: PageInfo | undefined, page2: PageInfo | undefined): boolean => {
   return page1 === page2
-      || (!page1 && !page2 && page1.section === page2.section
-                           && page1.owner === page2.owner
-                           && page1.book === page2.book
-                           && page1.page === page2.page);
+      || (page1 && page2
+             && page1.section === page2.section
+             && page1.owner === page2.owner
+             && page1.book === page2.book
+             && page1.page === page2.page);
 };
 
 export const InvalidPageInfo = {
