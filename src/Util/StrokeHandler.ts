@@ -43,7 +43,6 @@ export default class StrokeHandler {
 
     const stroke = this.dots.splice(0, this.dots.length);
 
-    console.debug("Stroke", stroke);
     this.strokes.push(stroke);
     this.delegate(stroke);
   }
@@ -78,11 +77,11 @@ export default class StrokeHandler {
   }
   
   private validateCode = (dot: Dot) => {
-    return dot.pageInfo.book < MAX_NOTE_ID
-        && dot.pageInfo.page < MAX_PAGE_ID
-        && (dot.dotType === DotTypes.PEN_DOWN
-         || dot.dotType === DotTypes.PEN_UP
-         || dot.dotType === DotTypes.PEN_MOVE);
+    return  dot.pageInfo.book < MAX_NOTE_ID
+            && dot.pageInfo.page < MAX_PAGE_ID
+            && (dot.dotType === DotTypes.PEN_DOWN
+               || dot.dotType === DotTypes.PEN_UP
+               || dot.dotType === DotTypes.PEN_MOVE);
   };
 
   validateStartDot(d1: Dot, d2: Dot, d3: Dot) {
@@ -105,13 +104,13 @@ export default class StrokeHandler {
   };
 
   private checkDeltaDirection(t: number, o1: number, o2: number) {
-    const delta31 = t - o1;
-    const delta32 = t - o2;
+    const delta1 = t - o1;
+    const delta2 = t - o2;
 
     // !(p3 > p1 and p3 > p2) or (p3 < p1 and p3 < p2) => (p3 > p1 !== p3 > p2)
-    return delta31 * delta32 < 0
+    return delta1 * delta2 < 0
         // some of the deltas is less than the constant delta
-        || Math.min(Math.abs(delta31), Math.abs(delta32)) < MAX_DELTA;
+        || Math.min(Math.abs(delta1), Math.abs(delta2)) < MAX_DELTA;
   }
 
   private validateDot(dot: Dot) {

@@ -28,7 +28,7 @@ export async function safeOp<T>(fn: () => Promise<T>): Promise<T | null> {
 export const pageInfo = (section: number, owner: number, book: number, page: number): PageInfo =>
     ({ section, owner, book, page });
 
-export function buildPageId(pageInfo: PageInfo, separator: string = "."): string {
+export function buildPageId(pageInfo: PageInfo | undefined, separator: string = "."): string {
   if (isInvalidPage(pageInfo))
     return undefined;
 
@@ -67,8 +67,8 @@ export const InvalidPageInfo = {
   page: -1,
 };
 
-export const isInvalidPage = (pageInfo?: PageInfo | null): boolean =>
-                                                          // pageInfo.section === 0 -> abnormal pageInfo
+export const isInvalidPage = (pageInfo?: PageInfo | null | undefined): boolean =>
+    // pageInfo.section === 0 -> abnormal pageInfo
     !pageInfo || isSamePage(pageInfo, InvalidPageInfo) || pageInfo.section === 0;
 
 /**

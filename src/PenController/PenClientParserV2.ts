@@ -552,8 +552,6 @@ export default class PenClientParserV2 {
     const isDown = packet.GetByte() === 0x00;
     const isInStrokeCollectionState = this.state.isStartWithDown && this.state.isBeforeMiddle && this.state.prevDot !== null;
 
-    console.log("PenUpDown: down: ", isDown, ", were writing: ", isInStrokeCollectionState);
-
     if (isInStrokeCollectionState)
       this.MakeUpDot();
 
