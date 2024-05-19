@@ -81,6 +81,12 @@ export const isPlatePaper = (pageInfo: PageInfo): boolean => {
   return pageInfo.owner === 1013 && pageInfo.book === 2;
 };
 
+let scaleFactor = 1;
+
+export const screenScaleFactor = (factor: number) => {
+  scaleFactor = factor;
+};
+
 const DPI = window.devicePixelRatio * 96;
 // Ncode Formula
 const NCODE_SIZE_IN_INCH = (8 * 7) / 600;
@@ -91,4 +97,4 @@ export const point72ToNcode = (point: number) => {
   return point / ratio;
 };
 
-export const ncodeToScreen = (ncode: number): number => ncode * NCODE_SIZE_IN_INCH * DPI;
+export const ncodeToScreen = (ncode: number): number => ncode * NCODE_SIZE_IN_INCH * DPI * scaleFactor;
