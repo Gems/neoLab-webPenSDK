@@ -249,7 +249,6 @@ export default class PenClientParserV2 {
 
       case CMD.SHUTDOWN_EVENT:
         const shutdownReason = packet.GetByte();
-        NLog.log("ParsePacket power off", shutdownReason);
 
         this.penController.handleShutdown(shutdownReason);
         break;
