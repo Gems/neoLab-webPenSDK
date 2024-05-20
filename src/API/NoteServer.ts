@@ -1,11 +1,11 @@
-import {PageInfo, PaperSize} from "../Util/type";
 import {initializeApp} from "firebase/app";
-import * as NLog from "../Util/NLog";
-
 import {getDownloadURL, getStorage, ref} from "firebase/storage";
 import JSZip, {JSZipObject} from "jszip";
 import PUIController from "./PUIController";
-import {buildBookId, fromMap, point72ToNcode} from "../Util/utils";
+import * as NLog from "../Util/NLog";
+import {PageInfo, PaperSize} from "../Util/type";
+import {buildBookId, fromMap} from "../Util/utils";
+import {parseNproj} from "../Util/Paper";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAY7MrI37TvkDerHsShcvOsueDpi4TGihw",
@@ -41,7 +41,7 @@ const getNprojUrl = async (pageInfo: PageInfo): Promise<string> => {
 const setNprojInPuiController = async (url: string | null, pageInfo: PageInfo) => {
   const nprojUrl = url ?? await getNprojUrl(pageInfo);
 
-  NLog.debug("[NoteServer] In the PUIController, set nporj at the following url => " + nprojUrl);
+  NLog.debug("[NoteServer] In the PUIController, set nproj at the following url => " + nprojUrl);
 
   await PUIController.getInstance().fetchOnlyPageSymbols(nprojUrl, pageInfo);
 };
@@ -53,47 +53,8 @@ const fetchNproj = async (nprojUrl: string): Promise<Map<number, PaperSize>> => 
 
   try {
     const nprojXml = await fetch(nprojUrl).then(res => res.text());
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(nprojXml, "text/xml");
 
-    const getDocTagElements = (tagName: string): HTMLCollectionOf<Element> =>
-        doc.children[0].getElementsByTagName(tagName);
-    const getDocTagValue = (tagName: string): string => getDocTagElements(tagName)[0]?.innerHTML;
-
-    // const section = getDocTagValue("section");
-    // const owner = getDocTagValue("owner");
-    // const book = getDocTagValue("code");
-
-    const startPage = parseInt(
-        getDocTagElements("segment_info")[0]?.getAttribute("ncode_start_page") ?? getDocTagValue("start_page"));
-
-    const pageSizes = new Map<number, PaperSize>();
-    const pageItems = getDocTagElements("page_item");
-    const totalPages = pageItems.length;
-
-    for (let i = startPage; i < totalPages; i++) {
-      const pageItem = pageItems[i];
-      const xLeft = point72ToNcode(parseInt(pageItem.getAttribute("x1")));
-      const xRight = point72ToNcode(parseInt(pageItem.getAttribute("x2")));
-      const yTop = point72ToNcode(parseInt(pageItem.getAttribute("y1")));
-      const yBottom = point72ToNcode(parseInt(pageItem.getAttribute("y2")));
-
-      const margin = pageItem
-          .getAttribute("crop_margin")
-          ?.split(",")
-          ?.map(_ => point72ToNcode(parseFloat(_)));
-
-      const [ marginLeft, marginTop, marginRight, marginBottom ] = margin;
-
-      const Xmin = xLeft + marginLeft;
-      const Ymin = yTop + marginTop;
-      const Xmax = xRight - marginRight;
-      const Ymax = yBottom - marginBottom;
-
-      pageSizes.set(i - startPage, { Xmin, Xmax, Ymin, Ymax, width: xRight, height: yBottom, margin } as PaperSize);
-    }
-
-    return pageSizes;
+    return parseNproj(nprojXml);
   } catch (err) {
     NLog.error(err);
     throw err;
@@ -160,6 +121,7 @@ const getNoteImage = async (pageInfo: PageInfo): Promise<string> => {
 const api = {
   extractMarginInfo,
   getNoteImage,
+  downloadNotePages,
   setNprojInPuiController,
 };
 

@@ -1,6 +1,6 @@
 import { PageInfo, PaperSize } from "./type";
-import {buildPageId, isInvalidPage, ncodeToScreen, safeOp} from "./utils";
-import NoteServer from "../API/NoteServer";
+import {buildPageId, isInvalidPage, ncodeToScreen, point72ToNcode, safeOp} from "./utils";
+import * as NLog from "./NLog";
 
 export type PaperDetails = {
   imageBlobUrl: string;
@@ -29,21 +29,52 @@ export function isPUI(pageInfo: PageInfo): boolean {
   return false;
 }
 
-export async function fetchPaperDetails(pageInfo: PageInfo, shouldIncludeImageBlobUrl: boolean = true): Promise<PaperDetails | null> {
-  // Ed: PUI is a special piece of paper that holds symbols to control input state (color, thickness, etc.)
-  if (isInvalidPage(pageInfo) || isPUI(pageInfo))
-    return null;
+export function parseNproj(nprojXml: string) {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(nprojXml, "text/xml");
 
-  const imageBlobUrl = shouldIncludeImageBlobUrl ? await safeOp(() => NoteServer.getNoteImage(pageInfo)) ?? "" : "";
-  const paperSize = await safeOp(() => NoteServer.extractMarginInfo(pageInfo));
+    const getDocTagElements = (tagName: string): HTMLCollectionOf<Element> =>
+        doc.children[0].getElementsByTagName(tagName);
+    const getDocTagValue = (tagName: string): string => getDocTagElements(tagName)[0]?.innerHTML;
 
-  const width = ncodeToScreen(paperSize.width);
-  const height = ncodeToScreen(paperSize.height);
-  const Xmin = ncodeToScreen(paperSize.Xmin);
-  const Xmax = ncodeToScreen(paperSize.Xmax);
-  const Ymin = ncodeToScreen(paperSize.Ymin);
-  const Ymax = ncodeToScreen(paperSize.Ymax);
-  const margin = paperSize.margin.map(ncodeToScreen);
+    // const section = getDocTagValue("section");
+    // const owner = getDocTagValue("owner");
+    // const book = getDocTagValue("code");
 
-  return paperSize ? { imageBlobUrl, paperSize: { width, height, margin, Xmin, Xmax, Ymin, Ymax} } : null;
+    const startPage = parseInt(
+        getDocTagElements("segment_info")[0]?.getAttribute("ncode_start_page")
+                ?? getDocTagValue("start_page"));
+
+    const pageSizes = new Map<number, PaperSize>();
+    const pageItems = getDocTagElements("page_item");
+    const totalPages = pageItems.length;
+
+    for (let i = startPage; i < totalPages; i++) {
+      const pageItem = pageItems[i];
+      const xLeft = point72ToNcode(parseInt(pageItem.getAttribute("x1")));
+      const xRight = point72ToNcode(parseInt(pageItem.getAttribute("x2")));
+      const yTop = point72ToNcode(parseInt(pageItem.getAttribute("y1")));
+      const yBottom = point72ToNcode(parseInt(pageItem.getAttribute("y2")));
+
+      const margin = pageItem
+          .getAttribute("crop_margin")
+          ?.split(",")
+          ?.map(_ => point72ToNcode(parseFloat(_)));
+
+      const [ marginLeft, marginTop, marginRight, marginBottom ] = margin;
+
+      const Xmin = xLeft + marginLeft;
+      const Ymin = yTop + marginTop;
+      const Xmax = xRight - marginRight;
+      const Ymax = yBottom - marginBottom;
+
+      pageSizes.set(i - startPage, { Xmin, Xmax, Ymin, Ymax, width: xRight, height: yBottom, margin } as PaperSize);
+    }
+
+    return pageSizes;
+  } catch (err) {
+    NLog.error(err);
+    throw err;
+  }
 }
