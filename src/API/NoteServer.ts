@@ -54,7 +54,7 @@ const fetchNproj = async (nprojUrl: string): Promise<Map<number, PaperSize>> => 
   try {
     const nprojXml = await fetch(nprojUrl).then(res => res.text());
 
-    return parseNproj(nprojXml);
+    return parseNproj(nprojXml).pages;
   } catch (err) {
     NLog.error(err);
     throw err;

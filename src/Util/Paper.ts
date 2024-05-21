@@ -1,5 +1,5 @@
 import { PageInfo, PaperSize } from "./type";
-import {buildPageId, isInvalidPage, ncodeToScreen, point72ToNcode, safeOp} from "./utils";
+import {buildPageId, point72ToNcode} from "./utils";
 import * as NLog from "./NLog";
 
 export type PaperDetails = {
@@ -38,9 +38,9 @@ export function parseNproj(nprojXml: string) {
         doc.children[0].getElementsByTagName(tagName);
     const getDocTagValue = (tagName: string): string => getDocTagElements(tagName)[0]?.innerHTML;
 
-    // const section = getDocTagValue("section");
-    // const owner = getDocTagValue("owner");
-    // const book = getDocTagValue("code");
+    const section = getDocTagValue("section");
+    const owner = getDocTagValue("owner");
+    const book = getDocTagValue("code");
 
     const startPage = parseInt(
         getDocTagElements("segment_info")[0]?.getAttribute("ncode_start_page")
@@ -72,7 +72,12 @@ export function parseNproj(nprojXml: string) {
       pageSizes.set(i - startPage, { Xmin, Xmax, Ymin, Ymax, width: xRight, height: yBottom, margin } as PaperSize);
     }
 
-    return pageSizes;
+    return {
+      section,
+      owner,
+      book,
+      pages: pageSizes,
+    };
   } catch (err) {
     NLog.error(err);
     throw err;
