@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 import { PageInfo } from "./type";
 
 export async function fromMap<K,V>(map: Map<K,V>, key: K, supplier: (key: K) => Promise<V>): Promise<V> {
@@ -36,7 +38,7 @@ export function buildPageId(pageInfo: PageInfo | undefined, separator: string = 
   return [ section, owner, book, page ].join(separator);
 }
 
-export function buildBookId(pageInfo: PageInfo, separator: string = "."): string {
+export function buildBookId(pageInfo: Partial<PageInfo>, separator: string = "."): string {
   if (isInvalidPage(pageInfo))
     return undefined;
 
@@ -64,12 +66,15 @@ export const InvalidPageInfo = {
   section: -1,
   owner: -1,
   book: -1,
-  page: -1,
 };
 
-export const isInvalidPage = (pageInfo?: PageInfo | null | undefined): boolean =>
+export const isInvalidPage = (pageInfo?: Partial<PageInfo> | null | undefined): boolean =>
     // pageInfo.section === 0 -> abnormal pageInfo
-    !pageInfo || isSamePage(pageInfo, InvalidPageInfo) || pageInfo.section === 0;
+    !pageInfo
+    //|| pageInfo.section === 0 // REVIEW: Despite that it's written that section === 0 is an abnormal pageInfo, there are some nproj files with section 0.
+    || Object
+        .entries(InvalidPageInfo)
+        .some(([key , value]) => pageInfo[key as keyof PageInfo] === value);
 
 /**
  * Logic to confirm whether the corresponding page info is a plate paper or not.

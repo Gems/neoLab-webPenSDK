@@ -1,9 +1,8 @@
 import { PageInfo, PaperSize } from "./type";
 import {buildPageId, point72ToNcode} from "./utils";
-import * as NLog from "./NLog";
 
 export type PaperDetails = {
-  imageBlobUrl: string;
+  imageBlobUrl?: string;
   paperSize: PaperSize;
 };
 
@@ -29,18 +28,58 @@ export function isPUI(pageInfo: PageInfo): boolean {
   return false;
 }
 
+/*
+    <book>
+        <title>네오스마트펜체크시트</title>
+        <author></author>
+        <section>3</section>
+        <owner>27</owner>
+        <code>145</code>
+        <revision>22</revision>
+        <scale>0.001</scale>
+        <start_page>1</start_page>
+        <key_dot>1</key_dot>
+        <dot_is_line_segment>true</dot_is_line_segment>
+        <line_segment_length>3</line_segment_length>
+        <target_dpi>600</target_dpi>
+        <dotsize>1</dotsize>
+        <ncp_format>0</ncp_format>
+        <kind>0</kind>
+        <extra_info>pdf_page_count=1</extra_info>
+    </book>
+
+ */
+
+const zeroMargin = [ 0, 0, 0, 0 ];
+
 export function parseNproj(nprojXml: string) {
   try {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(nprojXml, "text/xml");
+    const doc = parser.parseFromString(nprojXml.trim(), "text/xml");
 
     const getDocTagElements = (tagName: string): HTMLCollectionOf<Element> =>
         doc.children[0].getElementsByTagName(tagName);
     const getDocTagValue = (tagName: string): string => getDocTagElements(tagName)[0]?.innerHTML;
 
-    const section = getDocTagValue("section");
-    const owner = getDocTagValue("owner");
-    const book = getDocTagValue("code");
+    const error = getDocTagElements("parsererror")[0]?.textContent;
+
+    if (error)
+      throw new Error(`Error while parsing XML: ${error}`);
+
+    const section = parseInt(getDocTagValue("section"));
+    const owner = parseInt(getDocTagValue("owner"));
+    const book = parseInt(getDocTagValue("code"));
+
+    // const details = {
+    //   scale: getDocTagValue("scale"),
+    //   key_dot: getDocTagValue("key_dot"),
+    //   dot_is_line_segment: getDocTagValue("dot_is_line_segment"),
+    //   line_segment_length: getDocTagValue("line_segment_length"),
+    //   target_dpi: getDocTagValue("target_dpi"),
+    //   dotsize: getDocTagValue("dotsize"),
+    //   ncp_format: getDocTagValue("ncp_format"),
+    //   kind: getDocTagValue("kind"),
+    // };
 
     const startPage = parseInt(
         getDocTagElements("segment_info")[0]?.getAttribute("ncode_start_page")
@@ -62,7 +101,10 @@ export function parseNproj(nprojXml: string) {
           ?.split(",")
           ?.map(_ => point72ToNcode(parseFloat(_)));
 
-      const [ marginLeft, marginTop, marginRight, marginBottom ] = margin;
+      if (!margin)
+        console.warn(`No margin found for book: ${section}.${owner}.${book}:  using zero margin.`);
+
+      const [ marginLeft, marginTop, marginRight, marginBottom ] = margin ?? zeroMargin;
 
       const Xmin = xLeft + marginLeft;
       const Ymin = yTop + marginTop;
@@ -79,7 +121,6 @@ export function parseNproj(nprojXml: string) {
       pages: pageSizes,
     };
   } catch (err) {
-    NLog.error(err);
     throw err;
   }
 }
