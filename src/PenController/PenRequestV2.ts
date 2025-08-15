@@ -628,7 +628,7 @@ export default class PenRequestV2 {
 
   /**
    * Function to create a buffer to request pen profile creation and transmit it.
-   * - The profile is not available after authentication through NeoRap,
+   * - The profile is not available after authentication through NeoLab,
    *   but it can be used temporarily using a fixed value.
    * @returns
    */
