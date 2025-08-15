@@ -13,24 +13,24 @@ $ yarn add web_pen_sdk
 
 ## Description
 ### **PenHelper**
-> scanPen, connectDevice, serviceBinding_16, serviceBinding_128, characteristicBinding, disconnect, dotCallback, handleDot, messageCallback, handleMessage, ncodeToScreen, ncodeToScreen_smartPlate, isSamePage
+> startScan, connectDevice, serviceBinding_16, serviceBinding_128, characteristicBinding, disconnect, dotCallback, handleDot, messageCallback, handleMessage, ncodeToScreen, ncodeToScreen_smartPlate, isSamePage
 
 ### [Pen Connection Setup/Release]
 
-### 1-1. scanPen
+### 1-1. startScan
 This logic scans devices for Bluetooth pen connection.
 ```ts
 /** This function scans the device for a Bluetooth pen connection. */
-scanPen = async () => { ... }
+startScan = async () => { ... }
 ```
 ```ts
 // Usage with React hook
 
-const scanPen = () => {
-  PenHelper.scanPen();
+const startScan = () => {
+  PenHelper.startScan();
 };
 
-<Button onClick={scanPen}></Button>
+<Button onClick={startScan}></Button>
 ```
 
 ### 1-2. connectDevice
@@ -352,10 +352,10 @@ SetAutoPowerOnEnable, SetBeepSoundEnable, SetHoverEnable, SetOfflineDataEnable, 
 import { PenHelper, NoteServer, PenMessageType } from 'web_pen_sdk';
 ```
 
-### Step1: Connect the pen using PenHelper.scanPen().
+### Step1: Connect the pen using PenHelper.startScan().
 ```ts
 /** Connect SmartPen to Web service */
-PenHelper.scanPen();
+PenHelper.startScan();
 ```
 
 ### Step2: Handle events (connection, battery information, etc.) from the pen.
