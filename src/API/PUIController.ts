@@ -365,7 +365,8 @@ export default class PUIController {
 
     $page_items.each((index: number, page) => {
       const p = $(page);
-      const pageDelta = parseInt(p.attr("number") || "index", 10);
+      const pageNumberAttr = p.attr("number");
+      const pageDelta = pageNumberAttr != null ? parseInt(pageNumberAttr, 10) : index;
       const pageInfo = { section, owner, book, page: startPage + pageDelta };
 
       const surface_pu = {
