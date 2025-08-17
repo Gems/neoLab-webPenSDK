@@ -1,6 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
-import { PageInfo } from "./type";
+import { BookInfo, PageInfo } from "./type";
 
 export async function fromMap<K,V>(map: Map<K,V>, key: K, supplier: (key: K) => Promise<V>): Promise<V> {
   if (!map.has(key))
@@ -31,18 +31,18 @@ export const pageInfo = (section: number, owner: number, book: number, page: num
     ({ section, owner, book, page });
 
 export function buildPageId(pageInfo: PageInfo | undefined, separator: string = "."): string {
-  if (isInvalidPage(pageInfo))
+  if (isInvalidBook(pageInfo))
     return undefined;
 
   const { section, owner, book, page } = pageInfo;
   return [ section, owner, book, page ].join(separator);
 }
 
-export function buildBookId(pageInfo: Partial<PageInfo>, separator: string = "."): string {
-  if (isInvalidPage(pageInfo))
+export function buildBookId(bookInfo: BookInfo, separator: string = "."): string {
+  if (isInvalidBook(bookInfo))
     return undefined;
 
-  const { section, owner, book } = pageInfo;
+  const { section, owner, book } = bookInfo;
   return [ section, owner, book ].join(separator);
 }
 
@@ -55,26 +55,32 @@ export function buildBookId(pageInfo: Partial<PageInfo>, separator: string = "."
  */
 export const isSamePage = (page1: PageInfo | undefined, page2: PageInfo | undefined): boolean => {
   return page1 === page2
-      || (page1 && page2
-             && page1.section === page2.section
-             && page1.owner === page2.owner
-             && page1.book === page2.book
-             && page1.page === page2.page);
+      || (isSameBook(page1, page2) && page1.page === page2.page);
 };
 
-export const InvalidPageInfo = {
+export const isSameBook = (bookOne?: BookInfo, bookTwo?: BookInfo): boolean => {
+  return bookOne === bookTwo
+      || (bookOne && bookTwo
+             && bookOne.section === bookTwo.section
+             && bookOne.owner === bookTwo.owner
+             && bookOne.book === bookTwo.book);
+};
+
+export const InvalidBookInfo = {
   section: -1,
   owner: -1,
   book: -1,
 };
 
-export const isInvalidPage = (pageInfo?: Partial<PageInfo> | null | undefined): boolean =>
+export const InvalidPageInfo = {
+  ... InvalidBookInfo,
+  page: -1,
+};
+
+export const isInvalidBook = (bookInfo?: BookInfo | null | undefined): boolean =>
     // pageInfo.section === 0 -> abnormal pageInfo
-    !pageInfo
     //|| pageInfo.section === 0 // REVIEW: Despite that it's written that section === 0 is an abnormal pageInfo, there are some nproj files with section 0.
-    || Object
-        .entries(InvalidPageInfo)
-        .some(([key , value]) => pageInfo[key as keyof PageInfo] === value);
+    !bookInfo || isSameBook(bookInfo, InvalidBookInfo) || bookInfo.section === 0;
 
 /**
  * Logic to confirm whether the corresponding page info is a plate paper or not.

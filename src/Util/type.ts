@@ -1,7 +1,10 @@
-export type PageInfo = {
-  section: number;
-  owner: number;
+export type BookInfo = {
   book: number;
+  owner: number;
+  section: number;
+}
+
+export type PageInfo = BookInfo & {
   page: number;
 };
 

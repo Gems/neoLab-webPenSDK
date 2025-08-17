@@ -511,14 +511,14 @@ export default class PUIController {
 
     // book information
     const bookJson = nprojJson.book;
-    const section = parseInt(bookJson[0].section.toString());
-    const owner = parseInt(bookJson[0].owner.toString());
-    const book = parseInt(bookJson[0].code.toString());
-    const startPage = parseInt(bookJson[0].start_page[0]._);
+    const section = parseInt(bookJson[0].section.toString(), 10);
+    const owner = parseInt(bookJson[0].owner.toString(), 10);
+    const book = parseInt(bookJson[0].code.toString(), 10);
+    const startPage = parseInt(bookJson[0].start_page[0]._, 10);
 
     // page information
     const pageJson = nprojJson.pages;
-    const numPages = parseInt(pageJson[0].$.count);
+    const numPages = parseInt(pageJson[0].$.count, 10);
 
     // symbol information
     const symbolsJson = nprojJson.symbols;
@@ -527,7 +527,7 @@ export default class PUIController {
     symbolJson.forEach(function (sym) {
       // console.log(sym.outerHTML);
 
-      const pageDelta = parseInt(sym.$.page);
+      const pageDelta = parseInt(sym.$.page, 10);
       const type: string = sym.$.type; // Only Rectangles are considered here.
       const x = parseFloat(sym.$.x);
       const y = parseFloat(sym.$.y);

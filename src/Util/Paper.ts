@@ -1,9 +1,13 @@
-import { PageInfo, PaperSize } from "./type";
+import { BookInfo, PageInfo, PaperSize } from "./type";
 import {buildPageId, point72ToNcode} from "./utils";
 
 export type PaperDetails = {
   imageBlobUrl?: string;
   paperSize: PaperSize;
+};
+
+export type NprojDetails = BookInfo & {
+  pages: Map<number, PaperSize>;
 };
 
 const PUI = new Map<string, any>()
@@ -51,8 +55,9 @@ export function isPUI(pageInfo: PageInfo): boolean {
  */
 
 const zeroMargin = [ 0, 0, 0, 0 ];
+const parseNumber = (str: string) => parseInt(str, 10);
 
-export function parseNproj(nprojXml: string) {
+export function parseNproj(nprojXml: string): NprojDetails {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(nprojXml.trim(), "text/xml");
@@ -66,9 +71,9 @@ export function parseNproj(nprojXml: string) {
     if (error)
       throw new Error(`Error while parsing XML: ${error}`);
 
-    const section = parseInt(getDocTagValue("section"));
-    const owner = parseInt(getDocTagValue("owner"));
-    const book = parseInt(getDocTagValue("code"));
+    const section = parseNumber(getDocTagValue("section"));
+    const owner = parseNumber(getDocTagValue("owner"));
+    const book = parseNumber(getDocTagValue("code"));
 
     // const details = {
     //   scale: getDocTagValue("scale"),
@@ -81,7 +86,7 @@ export function parseNproj(nprojXml: string) {
     //   kind: getDocTagValue("kind"),
     // };
 
-    const startPage = parseInt(
+    const startPage = parseNumber(
         getDocTagElements("segment_info")[0]?.getAttribute("ncode_start_page")
                 ?? getDocTagValue("start_page"));
 
@@ -91,10 +96,10 @@ export function parseNproj(nprojXml: string) {
 
     for (let i = startPage; i < totalPages; i++) {
       const pageItem = pageItems[i];
-      const xLeft = point72ToNcode(parseInt(pageItem.getAttribute("x1")));
-      const xRight = point72ToNcode(parseInt(pageItem.getAttribute("x2")));
-      const yTop = point72ToNcode(parseInt(pageItem.getAttribute("y1")));
-      const yBottom = point72ToNcode(parseInt(pageItem.getAttribute("y2")));
+      const xLeft = point72ToNcode(parseNumber(pageItem.getAttribute("x1")));
+      const xRight = point72ToNcode(parseNumber(pageItem.getAttribute("x2")));
+      const yTop = point72ToNcode(parseNumber(pageItem.getAttribute("y1")));
+      const yBottom = point72ToNcode(parseNumber(pageItem.getAttribute("y2")));
 
       const margin = pageItem
           .getAttribute("crop_margin")
@@ -115,9 +120,9 @@ export function parseNproj(nprojXml: string) {
     }
 
     return {
-      section,
-      owner,
       book,
+      owner,
+      section,
       pages: pageSizes,
     };
   } catch (err) {

@@ -5,7 +5,7 @@ import PUIController from "./PUIController";
 import * as NLog from "../Util/NLog";
 import {PageInfo, PaperSize} from "../Util/type";
 import {buildBookId, fromMap} from "../Util/utils";
-import {parseNproj} from "../Util/Paper";
+import { NprojDetails, parseNproj } from "../Util/Paper";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAY7MrI37TvkDerHsShcvOsueDpi4TGihw",
@@ -46,15 +46,15 @@ const setNprojInPuiController = async (url: string | null, pageInfo: PageInfo) =
   await PUIController.getInstance().fetchOnlyPageSymbols(nprojUrl, pageInfo);
 };
 
-const NprojCache = new Map<string, Map<number, PaperSize>>();
+const NprojCache = new Map<string, NprojDetails>();
 
-const fetchNproj = async (nprojUrl: string): Promise<Map<number, PaperSize>> => {
+const fetchNproj = async (nprojUrl: string): Promise<NprojDetails> => {
   NLog.debug("[NoteServer] Get NProj via the following url: " + nprojUrl);
 
   try {
     const nprojXml = await fetch(nprojUrl).then(res => res.text());
 
-    return parseNproj(nprojXml).pages;
+    return parseNproj(nprojXml);
   } catch (err) {
     NLog.error(err);
     throw err;
@@ -68,10 +68,10 @@ const fetchNproj = async (nprojUrl: string): Promise<Map<number, PaperSize>> => 
 const extractMarginInfo = async (pageInfo: PageInfo): Promise<PaperSize> => {
   const bookId = buildBookId(pageInfo);
   const page = pageInfo.page;
-  const pagesSizes = await fromMap(
+  const nprojDetails = await fromMap(
       NprojCache, bookId, () => getNprojUrl(pageInfo).then(fetchNproj));
 
-  return pagesSizes.get(page);
+  return nprojDetails.pages.get(page);
 };
 
 const BookPages = new Map<string, Map<number, string>>();
