@@ -31,7 +31,7 @@ export const pageInfo = (section: number, owner: number, book: number, page: num
     ({ section, owner, book, page });
 
 export function buildPageId(pageInfo: PageInfo | undefined, separator: string = "."): string {
-  if (isInvalidBook(pageInfo))
+  if (!isValidBook(pageInfo))
     return undefined;
 
   const { section, owner, book, page } = pageInfo;
@@ -39,7 +39,7 @@ export function buildPageId(pageInfo: PageInfo | undefined, separator: string = 
 }
 
 export function buildBookId(bookInfo: BookInfo, separator: string = "."): string {
-  if (isInvalidBook(bookInfo))
+  if (!isValidBook(bookInfo))
     return undefined;
 
   const { section, owner, book } = bookInfo;
@@ -77,10 +77,10 @@ export const InvalidPageInfo = {
   page: -1,
 };
 
-export const isInvalidBook = (bookInfo?: BookInfo | null | undefined): boolean =>
+export const isValidBook = (bookInfo?: BookInfo | null | undefined): boolean =>
     // pageInfo.section === 0 -> abnormal pageInfo
     //|| pageInfo.section === 0 // REVIEW: Despite that it's written that section === 0 is an abnormal pageInfo, there are some nproj files with section 0.
-    !bookInfo || isSameBook(bookInfo, InvalidBookInfo) || bookInfo.section === 0;
+    bookInfo && !isSameBook(bookInfo, InvalidBookInfo);
 
 /**
  * Logic to confirm whether the corresponding page info is a plate paper or not.
